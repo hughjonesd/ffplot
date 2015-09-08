@@ -1,0 +1,15 @@
+Package: ffplot
+Type: Package
+Title: The Fast, Friendly Plotting Function
+Version: 0.0.0.9000
+Date: 2015-09-08
+Author: David Hugh-Jones <davidhughjones@gmail.com>
+Maintainer: David Hugh-Jones <davidhughjones@gmail.com>
+URL: http://github.com/hughjonesd/ffplot
+BugReports: http://github.com/hughjonesd/ffplot/issues
+Description: Provides a simple, intuitive way to plot your data. ffplot uses ggplot2 as a backend.
+License: GPL-2
+LazyData: TRUE
+Imports:
+  ggplot2
+  reshape2
