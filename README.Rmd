@@ -6,12 +6,18 @@ output: html_document
 ---
 
 ```{r, echo = FALSE, eval = FALSE}
-# to create the markdown
+# to create README.md
+library(rmarkdown)
 render("README.Rmd", md_document(fig_width = 4, fig_height = 3))
 ```
 # ffplot
 
 `ffplot` is the fast, friendly plotting command for R. 
+
+`ffplot` is a simple and intuitive frontend around `ggplot2`. The goal is that you can use it without thinking or 
+looking up documentation.
+
+Status: totally alpha! Download and enjoy. 
 
 ## Install
 
