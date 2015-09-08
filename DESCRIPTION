@@ -11,5 +11,5 @@ Description: Provides a simple, intuitive way to plot your data. ffplot uses ggp
 License: GPL-2
 LazyData: TRUE
 Imports:
-  ggplot2
+  ggplot2,
   reshape2
