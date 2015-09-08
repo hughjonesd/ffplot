@@ -21,25 +21,25 @@ Simple scatterplots:
 
     ffplot(price ~ carat, d30)
 
-![](README_files/figure-markdown_strict/unnamed-chunk-2-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-3-1.png)
 
 Plot numeric data by categories:
 
     ffplot(price ~ color, d30)
 
-![](README_files/figure-markdown_strict/unnamed-chunk-3-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-4-1.png)
 
 Barplot of categories:
 
     ffplot(cut ~ color, d30)
 
-![](README_files/figure-markdown_strict/unnamed-chunk-4-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-5-1.png)
 
 Plot a function of your data:
 
     ffplot(range(price) ~ color, d30)
 
-![](README_files/figure-markdown_strict/unnamed-chunk-5-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-6-1.png)
 
 `ffplot` tries to guess what you want:
 
@@ -47,24 +47,34 @@ Plot a function of your data:
 
     ## Warning: Removed 4 rows containing missing values (stat_summary).
 
-![](README_files/figure-markdown_strict/unnamed-chunk-6-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-7-1.png)
 
 Plot data with summary statistics:
 
     ffplot(price + mean(price) ~ color, d30)
 
-![](README_files/figure-markdown_strict/unnamed-chunk-7-1.png)
-
-Change the defaults:
-
-    ffplot(price ~ color, diamonds, geom ="box")
-
 ![](README_files/figure-markdown_strict/unnamed-chunk-8-1.png)
 
-    ffplot(price ~ color, diamonds, geom ="violin")
+Use any functions:
+
+    ffplot(mean(price) + ci(price, .99) ~ color, d30, geom = c("point", "linerange"))
+
+    ## Warning: Removed 4 rows containing missing values (stat_summary).
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-9-1.png)
 
-    ffplot(mean(price) ~ color, diamonds, geom = "point", shape = 3)
+Change the defaults:
+
+    ffplot(price ~ color, diamonds, geom ="violin")
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-10-1.png)
+
+    ffplot(mean(price) ~ color, diamonds, geom = "point", shape = 3)
+
+![](README_files/figure-markdown_strict/unnamed-chunk-11-1.png)
+
+Add `ggplot2` options:
+
+    ffplot(cut ~ color, diamonds) + scale_fill_grey()
+
+![](README_files/figure-markdown_strict/unnamed-chunk-12-1.png)
