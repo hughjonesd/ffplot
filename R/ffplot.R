@@ -1,8 +1,4 @@
 
-library(ggplot2)
-library(reshape2)
-#library(formula.tools)
-
 fave <- function(x, ...) UseMethod("fave")
 
 # TODO: why does by use factor levels which aren't in data, in rhs?
@@ -30,6 +26,21 @@ geom_map <- list(
   range = "linerange"
 )
 
+#' Return confidence intervals of a variable
+#'
+#' @param x A numeric vector
+#' @param level Confidence level
+#' @param na.rm Logical. Should missing values be removed?
+#' @param df Degrees of freedom. By default this is \code{Inf} which is equivalent to assuming a normal distribution.
+#'
+#' @return A length-two vector giving the confidence interval around the mean.
+#' @export
+#'
+#' @examples
+#' ci(rnorm(10), 0.95)
+#' a <- rnorm(10)
+#' ci(a, 0.99)
+#' ci(a, 0.99, df = 10)
 ci <- function(x, level = 0.95, na.rm = TRUE, df = Inf) {
   if (na.rm) x <- na.omit(x)
   lx <- length(x)
@@ -37,6 +48,46 @@ ci <- function(x, level = 0.95, na.rm = TRUE, df = Inf) {
   mean(x) + c(- se, + se) * qt((1 + level)/2, df)
 }
 
+#' Fast Friendly Plot
+#'
+#' Plots subsets of your data using \code{\link[ggplot2]{ggplot}}.
+#'
+#' The data is split into subsets for each unique value of the right hand side of \code{formula}.
+#' Each term on the left hand side of \code{formula} is evaluated within that subset, and the results
+#' are used to create a \code{\link[ggplot2]{layer}}.
+#'
+#' By default, \code{geom}s are chosen as follows: if the left hand side term evaluates to a character or factor,
+#' a histogram of proportions is plotted using \code{\link[ggplot2]{geom_histogram}}. If the term is numeric and
+#' always returns a single value (e.g. \code{mean(y)}) then a line is plotted; if it always returns two values,
+#' vertical lines are used; otherwise points are plotted. Certain functions are automagically recognized, e.g.
+#' \code{\link{ci}} creates a \code{\link[ggplot2]{geom_errorbar}}.
+#'
+#' @param formula a two-sided formula. The right hand side must contain only one term (which can be an interaction, e.g. \code{g1:g2}).
+#' @param data a data frame
+#' @param geom a vector of one or more names of geoms
+#' @param ... other arguments passed into (all) geoms
+#' @param subset an optional vector specifying a subset of the data
+#' @param smooth logical (not yet implemented!)
+#'
+#' @return A ggplot object which can be printed or modified.
+#' @export
+#'
+#' @examples
+#' data(diamonds)
+#' d30 <- diamonds[1:30,]
+#' ffplot(price ~ carat, d30)
+#' ffplot(price ~ color, d30)
+#' # histogram:
+#' ffplot(cut ~ color, d30)
+#' ffplot(range(price) ~ color, d30)
+#' ffplot(ci(price, 0.95) ~ color, d30)
+#' ffplot(price + mean(price) ~ color, d30)
+#' # customizing geoms:
+#' ffplot(mean(price) + ci(price, .99) ~ color, d30, geom = c("point", "linerange"))
+#' ffplot(price ~ color, diamonds, geom ="violin")
+#' ffplot(mean(price) ~ color, diamonds, geom = "point", shape = 3)
+#' # extra customization with ggplot:
+#' ffplot(cut ~ color, diamonds) + scale_fill_grey()
 ffplot <- function(formula, data = parent.frame(), geom = NULL,  ..., subset = NULL, smooth = NULL) {
   rhs <- attr(terms(formula[-2L], keep.order = TRUE), "term.labels")
   lhs_all <- attr(terms(formula[-3L], keep.order = TRUE), "term.labels")
@@ -85,44 +136,3 @@ ffplot <- function(formula, data = parent.frame(), geom = NULL,  ..., subset = N
   ggp <- ggp + xlab(rhs) + ylab(Reduce(paste, deparse(formula[[2]])))
   return(ggp)
 }
-
-if (FALSE) {
-data("diamonds", package = "ggplot2")
-d2 <- diamonds[1:15,]
-# basic use
-ffplot(price ~ color, d2)
-ffplot(price ~ carat, d2)
-
-# factor on LHS
-ffplot(color ~ cut, d2)
-ffplot(color ~ cut, d2, position = "fill")
-
-# manual geoms
-ffplot(price ~ color, diamonds, geom ="box")
-ffplot(price ~ color, diamonds, geom ="violin")
-
-# functions on left and right
-ffplot(range(price) ~ color, d2)
-ffplot(range(price) ~ color, d2, geom = "errorbar")
-ffplot(carat ~ cut(price, c(0, 335, 400)), diamonds)
-ffplot(mean(price) ~ color, d2, geom = "point")
-ffplot(mean(price) ~ color, d2, geom = "point", shape = 3)
-
-# multiple LHS
-ffplot(price + quantile(price, c(0.25, 0.75)) ~ color, d2)
-ffplot(price + mean(price) ~ color, d2)
-# TODO make bars not black!
-ffplot(price + mean(price) ~ color, d2, geom = c("point", "bar"))
-ffplot(price + mean(price) ~ color, diamonds, geom = c("violin", "line"))
-ffplot(ci(price) ~ color, diamonds) # errorbar default
-ffplot(mean(price) + ci(price) ~ color, diamonds)
-
-# without data argument
-color <- d2$color
-price <- d2$price
-ffplot(price ~ color)
-rm(color, price)
-
-# smoothing
-ffplot(mean(price) ~ carat, d2) # do we smooth or what?
-} # if (FALSE)

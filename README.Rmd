@@ -13,6 +13,16 @@ render("README.Rmd", md_document(fig_width = 4, fig_height = 3))
 
 `ffplot` is the fast, friendly plotting command for R. 
 
+## Install
+
+```{r, eval = FALSE}
+library(devtools)
+install_github("hughjonesd/ffplot")
+```
+
+
+## Examples
+
 ```{r}
 library(ffplot)
 library(ggplot2)
