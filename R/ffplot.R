@@ -94,7 +94,6 @@ ci <- function(x, level = 0.95, na.rm = TRUE, df = Inf) {
 ffplot <- function(formula, data = parent.frame(), geom = NULL,  ..., subset = NULL, smooth = NULL) {
   rhs <- attr(terms(formula[-2L], keep.order = TRUE), "term.labels")
   lhs_all <- attr(terms(formula[-3L], keep.order = TRUE), "term.labels")
-  geom_names <- c("point", "line", "errorbar", "boxplot", "barplot", "linerange", "violin", "histogram")
   if (! missing(geom)) geom <- rep_len(geom, length(lhs_all))
 
   ggp <- ggplot(data = NULL)
@@ -109,16 +108,16 @@ ffplot <- function(formula, data = parent.frame(), geom = NULL,  ..., subset = N
     if (! is.name(lhsfun)) lhsfun <- lhsfun[[1]] # if it's a name it's probably just a variable
     lhsfun <- as.character(lhsfun)
     lenresult <- sapply(result, length)
-    # don't use "line" if rhs is a factor (or fix ggplot complaint) TODO
+    cv <- attr(result, "colvalues") # can be numeric, factor
     geom_name <- if (! is.null(geom)) geom[i] else
       if (! is.null(geom_map[[lhsfun]])) geom_map[[lhsfun]] else
-      if (is.character(result_data) || is.factor(result_data)) "histogram" else
+      if (is.character(result_data) || is.factor(result_data)) ifelse(is.numeric(cv), "density", "histogram") else
       if (all(lenresult == 1)) "line" else
       if (all(lenresult == 2)) "linerange" else "point"
 
     # TODO: allow default attributes to be overridden by ..., e.g. position = "fill" below
-    cv <- attr(result, "colvalues") # can be numeric, factor
     dfr <- data.frame(y = result_data, x = rep(cv, lenresult), count = unlist(lapply(lenresult, seq_len)))
+    geom_names <- c("point", "line", "errorbar", "boxplot", "barplot", "linerange", "violin", "histogram", "density")
     geom_name <- match.arg(geom_name, geom_names)
     lyr <- switch(geom_name,
       "point"     = geom_point(aes(x = x, y = y), data = dfr, size = 3, ...),
@@ -126,6 +125,7 @@ ffplot <- function(formula, data = parent.frame(), geom = NULL,  ..., subset = N
       "boxplot"   = geom_boxplot(aes(x = factor(x), y = y), data = dfr, ...),
       "barplot"   = geom_bar(aes(x = x, y = y), stat = "identity", data = dfr, fill = "navy", ...),
       "histogram" = geom_histogram(aes(x = x, group = y, fill = y), data = dfr, position = "fill"),
+      "density"   = geom_density(aes(x = x, group = y, fill = y), data = dfr, position = "fill"),
       "violin"    = geom_violin(aes(x = factor(x), y = y), data = dfr, ...),
       "errorbar"  = stat_summary(fun.y = mean, fun.ymin = min, fun.ymax = max, mapping = aes(x = x, y = y, group = x),
                       geom = "errorbar", width = 0.25, data = dfr, ...),
@@ -134,7 +134,7 @@ ffplot <- function(formula, data = parent.frame(), geom = NULL,  ..., subset = N
     )
 
     ggp <- ggp + lyr
-    if (geom_name == "histogram") ggp <- ggp + guides(fill = guide_legend(title = lhs))
+    if (geom_name %in% c("histogram", "density")) ggp <- ggp + guides(fill = guide_legend(title = lhs))
   }
   ggp <- ggp + xlab(rhs) + ylab(Reduce(paste, deparse(formula[[2]])))
   return(ggp)

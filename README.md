@@ -43,17 +43,23 @@ Plot numeric data by categories:
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-5-1.png)
 
-Barplot of categories:
+Barplot of categorical data:
 
     ffplot(cut ~ color, d30)
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-6-1.png)
 
+Density plot, if right hand side is numeric:
+
+    ffplot(cut ~ depth, d30)
+
+![](README_files/figure-markdown_strict/unnamed-chunk-7-1.png)
+
 Plot a function of your data:
 
     ffplot(range(price) ~ color, d30)
 
-![](README_files/figure-markdown_strict/unnamed-chunk-7-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-8-1.png)
 
 `ffplot` tries to guess what you want:
 
@@ -61,13 +67,13 @@ Plot a function of your data:
 
     ## Warning: Removed 4 rows containing missing values (stat_summary).
 
-![](README_files/figure-markdown_strict/unnamed-chunk-8-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-9-1.png)
 
 Plot data with summary statistics:
 
     ffplot(price + mean(price) ~ color, d30)
 
-![](README_files/figure-markdown_strict/unnamed-chunk-9-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-10-1.png)
 
 Use any functions:
 
@@ -75,7 +81,7 @@ Use any functions:
 
     ## Warning: Removed 4 rows containing missing values (stat_summary).
 
-![](README_files/figure-markdown_strict/unnamed-chunk-10-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-11-1.png)
 
 Barplot with confidence intervals:
 
@@ -83,17 +89,22 @@ Barplot with confidence intervals:
 
     ## Warning: Removed 4 rows containing missing values (stat_summary).
 
-![](README_files/figure-markdown_strict/unnamed-chunk-11-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-12-1.png)
 
 Add `ggplot2` options:
 
     ffplot(cut ~ color, diamonds) + scale_fill_grey()
 
-![](README_files/figure-markdown_strict/unnamed-chunk-12-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-13-1.png)
 
 TODO
 ----
 
 -   Auto-smoothing for continuous x variables.
--   Better ability to override defaults.
+-   Better ability to override defaults; probably something like:
+
+<!-- -->
+
+    ffplot(violin(carat) + point(mean(carat)) ~ color, diamonds)
+
 -   More geoms.

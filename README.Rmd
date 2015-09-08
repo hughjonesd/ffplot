@@ -50,11 +50,18 @@ Plot numeric data by categories:
 ffplot(price ~ color, d30)
 ```
 
-Barplot of categories:
+Barplot of categorical data:
 
 ```{r}
 ffplot(cut ~ color, d30)
 ```
+
+Density plot, if right hand side is numeric:
+
+```{r}
+ffplot(cut ~ depth, d30)
+```
+
 
 Plot a function of your data:
 
@@ -97,5 +104,8 @@ ffplot(cut ~ color, diamonds) + scale_fill_grey()
 ## TODO
 
 * Auto-smoothing for continuous x variables.
-* Better ability to override defaults.
+* Better ability to override defaults; probably something like:
+```{r, eval = FALSE}
+ffplot(violin(carat) + point(mean(carat)) ~ color, diamonds)
+```
 * More geoms.
