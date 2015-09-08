@@ -42,27 +42,30 @@ ffplot(cut ~ color, d30)
 
 Plot a function of your data:
 
-
 ```{r}
 ffplot(range(price) ~ color, d30)
 ```
 
 `ffplot` tries to guess what you want:
+
 ```{r}
 ffplot(ci(price, 0.95) ~ color, d30)
 ```
 
 
 Plot data with summary statistics:
+
 ```{r}
 ffplot(price + mean(price) ~ color, d30)
 ```
 
-Change the defaults:
-```{r}
-ffplot(price ~ color, diamonds, geom ="box")
+Use any functions:
 
+```{r}
+ffplot(mean(price) + ci(price, .99) ~ color, d30, geom = c("point", "linerange"))
 ```
+
+Change the defaults:
 
 ```{r}
 ffplot(price ~ color, diamonds, geom ="violin")
@@ -73,4 +76,8 @@ ffplot(price ~ color, diamonds, geom ="violin")
 ffplot(mean(price) ~ color, diamonds, geom = "point", shape = 3)
 ```
 
+Add `ggplot2` options:
 
+```{r}
+ffplot(cut ~ color, diamonds) + scale_fill_grey()
+```
