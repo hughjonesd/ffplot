@@ -1,4 +1,7 @@
 
+#' @import ggplot2
+#' @import reshape2
+
 fave <- function(x, ...) UseMethod("fave")
 
 # TODO: why does by use factor levels which aren't in data, in rhs?
@@ -121,7 +124,7 @@ ffplot <- function(formula, data = parent.frame(), geom = NULL,  ..., subset = N
       "point"     = geom_point(aes(x = x, y = y), data = dfr, size = 3, ...),
       "line"      = geom_line(aes(x = x, y = y, group = 1), data = dfr, ...),
       "boxplot"   = geom_boxplot(aes(x = factor(x), y = y), data = dfr, ...),
-      "barplot"   = geom_bar(aes(x = x, y = y), stat = "identity", data = dfr, ...),
+      "barplot"   = geom_bar(aes(x = x, y = y), stat = "identity", data = dfr, fill = "navy", ...),
       "histogram" = geom_histogram(aes(x = x, group = y, fill = y), data = dfr, position = "fill"),
       "violin"    = geom_violin(aes(x = factor(x), y = y), data = dfr, ...),
       "errorbar"  = stat_summary(fun.y = mean, fun.ymin = min, fun.ymax = max, mapping = aes(x = x, y = y, group = x),

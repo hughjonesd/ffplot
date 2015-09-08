@@ -2,3 +2,5 @@
 
 export(ci)
 export(ffplot)
+import(ggplot2)
+import(reshape2)
