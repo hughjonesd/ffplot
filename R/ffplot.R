@@ -48,15 +48,6 @@ ffplot <- function(formula, data = parent.frame(), geom = NULL,  ..., subset = N
   for (lhs in lhs_all) {
     i <- i + 1
     fml <- formula(paste(lhs, "~", rhs))
-    # what do I want?
-    # mean(y) ~ x : single number
-    # range(y), ci(y) : two numbers
-    # table(y) : multiple numbers with names, all same size
-    # y ~ x : multiple numbers
-    # suppose if y is a factor or a character, I automatically choose a barplot of counts
-    # then I could just do y ~ x
-
-
 
     result <- fave(fml, data, subset)
     result_data <- unlist(result)
@@ -74,7 +65,8 @@ ffplot <- function(formula, data = parent.frame(), geom = NULL,  ..., subset = N
     # TODO: allow default attributes to be overridden by ..., e.g. position = "fill" below
     cv <- attr(result, "colvalues") # can be numeric, factor
     dfr <- data.frame(y = result_data, x = rep(cv, lenresult), count = unlist(lapply(lenresult, seq_len)))
-    lyr <- switch(match.arg(geom_name, geom_names),
+    geom_name <- match.arg(geom_name, geom_names)
+    lyr <- switch(geom_name,
       "point"     = geom_point(aes(x = x, y = y), data = dfr, size = 3, ...),
       "line"      = geom_line(aes(x = x, y = y, group = 1), data = dfr, ...),
       "boxplot"   = geom_boxplot(aes(x = factor(x), y = y), data = dfr, ...),
@@ -82,13 +74,15 @@ ffplot <- function(formula, data = parent.frame(), geom = NULL,  ..., subset = N
       "histogram" = geom_histogram(aes(x = x, group = y, fill = y), data = dfr, position = "fill"),
       "violin"    = geom_violin(aes(x = factor(x), y = y), data = dfr, ...),
       "errorbar"  = stat_summary(fun.y = mean, fun.ymin = min, fun.ymax = max, mapping = aes(x = x, y = y, group = x),
-        geom = "errorbar", width = 0.25, data = dfr, ...),
+                      geom = "errorbar", width = 0.25, data = dfr, ...),
       "linerange" = stat_summary(fun.y = mean, fun.ymin = min, fun.ymax = max, mapping = aes(x = x, y = y, group = x),
-        geom = "linerange", data = dfr, ...)
+                      geom = "linerange", data = dfr, ...)
     )
+
     ggp <- ggp + lyr
+    if (geom_name == "histogram") ggp <- ggp + guides(fill = guide_legend(title = lhs))
   }
-  ggp <- ggp + xlab(rhs) + ylab(as.character(formula[[2]]))
+  ggp <- ggp + xlab(rhs) + ylab(Reduce(paste, deparse(formula[[2]])))
   return(ggp)
 }
 
