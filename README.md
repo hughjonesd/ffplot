@@ -68,8 +68,3 @@ Change the defaults:
     ffplot(mean(price) ~ color, diamonds, geom = "point", shape = 3)
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-10-1.png)
-
-smoothing
-=========
-
-ffplot(mean(price) ~ carat, d2) \# do we smooth or what? } \# if (FALSE)

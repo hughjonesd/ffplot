@@ -5,7 +5,10 @@ date: "8 September 2015"
 output: html_document
 ---
 
-
+```{r, echo = FALSE, eval = FALSE}
+# to create the markdown
+render("README.Rmd", md_document(fig_width = 4, fig_height = 3))
+```
 # ffplot
 
 `ffplot` is the fast, friendly plotting command for R. 
@@ -71,6 +74,3 @@ ffplot(mean(price) ~ color, diamonds, geom = "point", shape = 3)
 ```
 
 
-# smoothing
-ffplot(mean(price) ~ carat, d2) # do we smooth or what?
-} # if (FALSE)
