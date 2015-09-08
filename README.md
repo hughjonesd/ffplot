@@ -71,24 +71,29 @@ Plot data with summary statistics:
 
 Use any functions:
 
-    ffplot(mean(price) + ci(price, .99) ~ color, d30, geom = c("point", "linerange"))
+    ffplot(mean(price) + ci(price, .99) ~ color, d30)
 
     ## Warning: Removed 4 rows containing missing values (stat_summary).
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-10-1.png)
 
-Change the defaults:
+Barplot with confidence intervals:
 
-    ffplot(price ~ color, diamonds, geom ="violin")
+    ffplot(mean(price) + ci(price, .99) ~ color, d30, geom = c("bar", "errorbar"), col = "orange")
+
+    ## Warning: Removed 4 rows containing missing values (stat_summary).
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-11-1.png)
-
-    ffplot(mean(price) ~ color, diamonds, geom = "point", shape = 3)
-
-![](README_files/figure-markdown_strict/unnamed-chunk-12-1.png)
 
 Add `ggplot2` options:
 
     ffplot(cut ~ color, diamonds) + scale_fill_grey()
 
-![](README_files/figure-markdown_strict/unnamed-chunk-13-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-12-1.png)
+
+TODO
+----
+
+-   Auto-smoothing for continuous x variables.
+-   Better ability to override defaults.
+-   More geoms.

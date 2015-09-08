@@ -78,22 +78,24 @@ ffplot(price + mean(price) ~ color, d30)
 Use any functions:
 
 ```{r}
-ffplot(mean(price) + ci(price, .99) ~ color, d30, geom = c("point", "linerange"))
+ffplot(mean(price) + ci(price, .99) ~ color, d30)
 ```
 
-Change the defaults:
+Barplot with confidence intervals:
 
 ```{r}
-ffplot(price ~ color, diamonds, geom ="violin")
-
+ffplot(mean(price) + ci(price, .99) ~ color, d30, geom = c("bar", "errorbar"), col = "orange")
 ```
 
-```{r}
-ffplot(mean(price) ~ color, diamonds, geom = "point", shape = 3)
-```
 
 Add `ggplot2` options:
 
 ```{r}
 ffplot(cut ~ color, diamonds) + scale_fill_grey()
 ```
+
+## TODO
+
+* Auto-smoothing for continuous x variables.
+* Better ability to override defaults.
+* More geoms.
