@@ -104,6 +104,9 @@ ci <- function(x, level = 0.95, na.rm = TRUE, df = Inf) {
 #' vertical lines are used; otherwise points are plotted. Certain functions are automagically recognized, e.g.
 #' \code{\link{ci}} creates a \code{\link[ggplot2]{geom_errorbar}}.
 #'
+#' The default method simply calls \code{ffplot.formula}, passing its first argument as \code{data}. This plays nicely
+#' with \code{\link[dplyr]{dplyr}}.
+#'
 #' @param formula a two-sided formula. The right hand side must contain only one term (which can be an interaction, e.g. \code{g1:g2}).
 #' @param data a data frame
 #' @param geom a vector of one or more names of geoms
@@ -114,6 +117,7 @@ ci <- function(x, level = 0.95, na.rm = TRUE, df = Inf) {
 #' @return A ggplot object which can be printed or modified.
 #' @export
 #'
+#' @name ffplot
 #' @examples
 #' data(diamonds)
 #' d30 <- diamonds[1:30,]
@@ -130,7 +134,12 @@ ci <- function(x, level = 0.95, na.rm = TRUE, df = Inf) {
 #' ffplot(mean(price) ~ color, diamonds, geom = "point", shape = 3)
 #' # extra customization with ggplot:
 #' ffplot(cut ~ color, diamonds) + scale_fill_grey()
-ffplot <- function(formula, data = parent.frame(), geom = NULL,  ..., subset = NULL, smooth = NULL) {
+#' \dontrun{
+#' # with dplyr
+#' library(dplyr)
+#' diamonds %>% ffplot(cut ~ color)
+#' }
+ffplot.formula <- function(formula, data = parent.frame(), geom = NULL,  ..., subset = NULL, smooth = NULL) {
   rhs <- attr(terms(formula[-2L], keep.order = TRUE), "term.labels")
   lhs_all <- attr(terms(formula[-3L], keep.order = TRUE), "term.labels")
   if (! missing(geom)) geom <- rep_len(geom, length(lhs_all))
@@ -181,3 +190,11 @@ ffplot <- function(formula, data = parent.frame(), geom = NULL,  ..., subset = N
   ggp <- ggp + xlab(rhs) + ylab(Reduce(paste, deparse(formula[[2]])))
   return(ggp)
 }
+
+#' @export
+ffplot <- function (x, ...) UseMethod("ffplot")
+
+
+#' @rdname ffplot
+#' @export
+ffplot.default <- function (data, ...) ffplot.formula(..., data = data)

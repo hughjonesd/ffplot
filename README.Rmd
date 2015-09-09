@@ -100,7 +100,15 @@ Add `ggplot2` options:
 ffplot(cut ~ color, diamonds) + scale_fill_grey()
 ```
 
-Plus, bonus `fftable` function:
+Use it with `dplyr` or `magrittr`:
+
+```{r}
+library(dplyr)
+diamonds %>% ffplot(cut ~ color)
+```
+
+
+Bonus `fftable` function:
 
 ```{r}
 fftable(range(carat) ~ color, diamonds)

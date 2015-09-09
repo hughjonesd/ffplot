@@ -2,10 +2,14 @@
 % Please edit documentation in R/ffplot.R
 \name{ffplot}
 \alias{ffplot}
+\alias{ffplot.default}
+\alias{ffplot.formula}
 \title{Fast Friendly Plot}
 \usage{
-ffplot(formula, data = parent.frame(), geom = NULL, ..., subset = NULL,
-  smooth = NULL)
+\method{ffplot}{formula}(formula, data = parent.frame(), geom = NULL, ...,
+  subset = NULL, smooth = NULL)
+
+\method{ffplot}{default}(data, ...)
 }
 \arguments{
 \item{formula}{a two-sided formula. The right hand side must contain only one term (which can be an interaction, e.g. \code{g1:g2}).}
@@ -36,6 +40,9 @@ a histogram of proportions is plotted using \code{\link[ggplot2]{geom_histogram}
 always returns a single value (e.g. \code{mean(y)}) then a line is plotted; if it always returns two values,
 vertical lines are used; otherwise points are plotted. Certain functions are automagically recognized, e.g.
 \code{\link{ci}} creates a \code{\link[ggplot2]{geom_errorbar}}.
+
+The default method simply calls \code{ffplot.formula}, passing its first argument as \code{data}. This plays nicely
+with \code{\link[dplyr]{dplyr}}.
 }
 \examples{
 data(diamonds)
@@ -53,5 +60,10 @@ ffplot(price ~ color, diamonds, geom ="violin")
 ffplot(mean(price) ~ color, diamonds, geom = "point", shape = 3)
 # extra customization with ggplot:
 ffplot(cut ~ color, diamonds) + scale_fill_grey()
+\dontrun{
+# with dplyr
+library(dplyr)
+diamonds \%>\% ffplot(cut ~ color)
+}
 }
 
