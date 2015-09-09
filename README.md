@@ -19,14 +19,6 @@ Examples
 
     library(ffplot)
     library(ggplot2)
-
-    ## 
-    ## Attaching package: 'ggplot2'
-    ## 
-    ## The following object is masked from 'mtcars':
-    ## 
-    ##     mpg
-
     data(diamonds)
     d30 <- diamonds[1:30,]
     head(d30)
@@ -105,7 +97,14 @@ Add `ggplot2` options:
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-13-1.png)
 
-Plus, bonus `fftable` function:
+Use it with `dplyr` or `magrittr`:
+
+    library(dplyr)
+    diamonds %>% ffplot(cut ~ color)
+
+![](README_files/figure-markdown_strict/unnamed-chunk-14-1.png)
+
+Bonus `fftable` function:
 
     fftable(range(carat) ~ color, diamonds)
 
