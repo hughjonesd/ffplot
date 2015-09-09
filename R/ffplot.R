@@ -2,10 +2,9 @@
 #' @import ggplot2
 #' @import reshape2
 
-fave <- function(x, ...) UseMethod("fave")
 
 # TODO: why does by use factor levels which aren't in data, in rhs?
-fave.formula <- function(formula, data = parent.frame(), subset = NULL) {
+fave <- function(formula, data = parent.frame(), subset = NULL) {
   subset2 <-if (! is.null(subset)) eval(substitute(subset), data) else TRUE
   vars <- get_all_vars(formula, data) # this is the data we need.
   vars <- vars[subset2,]
@@ -20,9 +19,49 @@ fave.formula <- function(formula, data = parent.frame(), subset = NULL) {
   structure(result, class = "list", colvalues = sort(unique(rhs)))
 }
 
-fave.default <- function(data, ...) fave.formula(..., data = data)
+#' @rdname fftable
+#' @export
+fftable.default <- function(data, ...) fftable.formula(..., data = data)
 
-# print.fave <- function(x) print(simplify2array(x))
+#' Create a table from a formula
+#'
+#' \code{fftable} splits \code{data} by unique values of \code{formula}'s right hand side, and
+#' evaluates the left hand side for each subset.
+#'
+#' The default method simply passes its arguments on to \code{fftable.formula}, taking the first argument as
+#' \code{data}. This plays nicely with \code{\link[dplyr]{dplyr-package}}.
+#'
+#' @param formula a formula object with exactly one term on the LHS and RHS.
+#' @param data a data frame (or list or environment) containing the variables referred to in \code{formula}.
+#' @param subset an optional vector specifying a subset of \code{data}.
+#' @name fftable
+#' @return
+#' An object of class \code{\link{table}}, or \code{\link{ftable}} if the result has more than 2 dimensions.
+#' @export
+#'
+#' @examples
+#' fftable(mean(mpg) ~ gear, mtcars)
+#' fftable(range(mpg) ~ gear, mtcars)
+#' # returns a list:
+#' fftable(mpg ~ gear, mtcars)
+#' # returns a flat table:
+#' fftable(cbind(range(mpg), quantile(mpg, c(0.25, 0.75))) ~ gear, mtcars)
+#' \dontrun{
+#' library(dplyr)
+#' mtcars %>% fftable(range(mpg) ~ gear)
+#' }
+fftable.formula <- function(formula, data = parent.frame(), subset = NULL) {
+  res <- fave(formula, data, subset)
+  res <- simplify2array(res)
+  if (! is.list(res) && length(dim(res[[1]])) > 1) {
+    return (ftable(as.table(res)))
+  } else {
+    return(as.table(res))
+  }
+}
+
+#' @export
+fftable <- function(x, ...) UseMethod("fftable")
 
 geom_map <- list(
   ci = "errorbar",
@@ -96,7 +135,10 @@ ffplot <- function(formula, data = parent.frame(), geom = NULL,  ..., subset = N
   lhs_all <- attr(terms(formula[-3L], keep.order = TRUE), "term.labels")
   if (! missing(geom)) geom <- rep_len(geom, length(lhs_all))
 
-  ggp <- ggplot(data = NULL)
+  # TODO: facetting. This is complex because you need to (a) include facet info in (all) datasets
+  # (b) interact the facets with the RHS when doing calculations.
+  # (c) rewrite fave (or whatever) to return tables separately
+  ggp <- ggplot()
   i <- 0
   for (lhs in lhs_all) {
     i <- i + 1

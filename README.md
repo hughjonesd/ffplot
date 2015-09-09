@@ -107,4 +107,6 @@ TODO
 
     ffplot(violin(carat) + point(mean(carat)) ~ color, diamonds)
 
--   More geoms.
+-   More geoms
+-   Confidence interval function for binomial data
+-   Facetting

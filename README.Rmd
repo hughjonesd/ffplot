@@ -108,4 +108,6 @@ ffplot(cut ~ color, diamonds) + scale_fill_grey()
 ```{r, eval = FALSE}
 ffplot(violin(carat) + point(mean(carat)) ~ color, diamonds)
 ```
-* More geoms.
+* More geoms
+* Confidence interval function for binomial data
+* Facetting
