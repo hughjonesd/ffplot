@@ -94,11 +94,16 @@ Barplot with confidence intervals:
 ffplot(mean(price) + ci(price, .99) ~ color, d30, geom = c("bar", "errorbar"), col = "orange")
 ```
 
-
 Add `ggplot2` options:
 
 ```{r}
 ffplot(cut ~ color, diamonds) + scale_fill_grey()
+```
+
+Plus, bonus `fftable` function:
+
+```{r}
+fftable(range(carat) ~ color, diamonds)
 ```
 
 ## TODO
