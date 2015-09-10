@@ -131,7 +131,6 @@ ci <- function(x, ...) UseMethod("ci")
 #'
 #' @param formula a two-sided formula. The right hand side must contain only one term (which can be an interaction, e.g. \code{g1:g2}).
 #' @param data a data frame
-#' @param geom a vector of one or more names of geoms
 #' @param ... other arguments passed into (all) geoms
 #' @param subset an optional vector specifying a subset of the data
 #' @param smooth logical (not yet implemented!)
@@ -161,37 +160,55 @@ ci <- function(x, ...) UseMethod("ci")
 #' library(dplyr)
 #' diamonds %>% ffplot(cut ~ color)
 #' }
-ffplot.formula <- function(formula, data = parent.frame(), geom = NULL,  ..., subset = NULL, smooth = NULL) {
+ffplot.formula <- function(formula, data = parent.frame(), ..., subset = NULL, smooth = NULL) {
+
   rhs <- attr(terms(formula[-2L], keep.order = TRUE), "term.labels")
   lhs_all <- attr(terms(formula[-3L], keep.order = TRUE), "term.labels")
-  if (! missing(geom)) geom <- rep_len(geom, length(lhs_all))
 
   # TODO: facetting. This is complex because you need to (a) include facet info in (all) datasets
   # (b) interact the facets with the RHS when doing calculations.
   # (c) rewrite fave (or whatever) to return tables separately
   ggp <- ggplot()
   i <- 0
+  geom_names <- c("point", "line", "errorbar", "boxplot", "barplot", "linerange", "violin", "histogram", "density")
+
   for (lhs in lhs_all) {
     i <- i + 1
-    fml <- formula(paste(lhs, "~", rhs))
+    geom_name <- NULL
+    geom_args <- list()
+    outer_fun <- parse(text = lhs)[[1]] # this gets e.g. "log(y)" in "log(y) + ..."
+    if (is.call(outer_fun)) {
+      outer_fun_name <- as.character(outer_fun[[1]])
+      if (! is.na(geom_name <- pmatch(outer_fun_name, geom_names))) {
+        lhs <- as.character(outer_fun[[2]])
+        geom_name <- paste0("geom_", geom_name)
+        geom_args <- as.list(outer_fun[[3]])
+      }
+      if (outer_fun_name %in% names(geom_map)) {
+        geom_name <- geom_map[[outer_fun_name]]
+      }
+    }
+    # if we still haven't got geom_name, we'll decide by the mode of lhs and rhs
 
+    fml <- formula(paste(lhs, "~", rhs))
     result <- fave(fml, data, subset)
     result_data <- unlist(result)
-    lhsfun <- parse(text = lhs)[[1]]
-    if (! is.name(lhsfun)) lhsfun <- lhsfun[[1]] # if it's a name it's probably just a variable
-    lhsfun <- as.character(lhsfun)
     lenresult <- sapply(result, length)
     cv <- attr(result, "colvalues") # can be numeric, factor
-    geom_name <- if (! is.null(geom)) geom[i] else
-      if (! is.null(geom_map[[lhsfun]])) geom_map[[lhsfun]] else
-      if (is.character(result_data) || is.factor(result_data)) ifelse(is.numeric(cv), "density", "histogram") else
-      if (all(lenresult == 1)) "line" else
-      if (all(lenresult == 2)) "linerange" else "point"
 
+    if (is.null(geom_name)) geom_name <-
+      if (is.character(result_data) || is.factor(result_data)) ifelse(is.numeric(cv), "density", "histogram") else
+      if (all(lenresult == 2)) "linerange" else "point"
+    # by here geom_name is defined
+    geom <- match.fun(geom_name)
     # TODO: allow default attributes to be overridden by ..., e.g. position = "fill" below
     dfr <- data.frame(y = result_data, x = rep(cv, lenresult), count = unlist(lapply(lenresult, seq_len)))
-    geom_names <- c("point", "line", "errorbar", "boxplot", "barplot", "linerange", "violin", "histogram", "density")
-    geom_name <- match.arg(geom_name, geom_names)
+    default_geom_args$data <- dfr
+    default_geom_args$mapping <- aes(x = x, y = y)
+    default_geom_args <- merge(list(...), default_geom_args)
+    geom_args <- merge(geom_args, default_geom_args)
+    lyr <- do.call(geom, geom_args)
+
     lyr <- switch(geom_name,
       "point"     = geom_point(aes(x = x, y = y), data = dfr, size = 3, ...),
       "line"      = geom_line(aes(x = x, y = y, group = 1), data = dfr, ...),
