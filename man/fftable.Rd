@@ -18,7 +18,7 @@
 \item{subset}{an optional vector specifying a subset of \code{data}.}
 }
 \value{
-An object of class \code{\link{table}}, or \code{\link{ftable}} if the result has more than 2 dimensions.
+A data frame like that from \code{\link{aggregate}}.
 }
 \description{
 \code{fftable} splits \code{data} by unique values of \code{formula}'s right hand side, and
@@ -31,9 +31,7 @@ The default method simply passes its arguments on to \code{fftable.formula}, tak
 \examples{
 fftable(mean(mpg) ~ gear, mtcars)
 fftable(range(mpg) ~ gear, mtcars)
-# returns a list:
 fftable(mpg ~ gear, mtcars)
-# returns a flat table:
 fftable(cbind(range(mpg), quantile(mpg, c(0.25, 0.75))) ~ gear, mtcars)
 \dontrun{
 library(dplyr)

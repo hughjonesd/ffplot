@@ -2,16 +2,6 @@
 #' @import ggplot2
 #' @import reshape2
 
-
-merge.list <- function (x, y, ...) {
-  if (length(x) == 0) return(y)
-  if (length(y) == 0) return(x)
-  i = match(names(y), names(x))
-  i = is.na(i)
-  if (any(i))
-    x[names(y)[which(i)]] = y[which(i)]
-  x
-}
 # TODO: why does by use factor levels which aren't in data, in rhs?
 fave <- function(formula, data = parent.frame(), subset = NULL) {
   vars <- get_all_vars(formula, data) # this is the data we need.
@@ -72,52 +62,9 @@ fftable.formula <- function(formula, data = parent.frame(), subset = NULL) {
 fftable <- function(x, ...) UseMethod("fftable")
 
 geom_map <- list(
-  ci = "geom_errorbar"
+  ci = "geom_errorbar",
+  prop = "geom_bar"
 )
-
-#' Return confidence intervals of a variable
-#'
-#' @param x A vector
-#' @param level Confidence level
-#' @param na.rm Logical. Should missing values be removed?
-#' @param df Degrees of freedom. By default this is \code{Inf} which is equivalent to assuming a normal distribution.
-#'
-#' @return A length-two vector giving a confidence interval.
-#' If \code{x} is numeric, the confidence interval around the mean is calculated using the t distribution.
-#'
-#' If \code{x} is logical, or a factor with two levels, the binomial confidence interval is calculated for the
-#' number of \code{TRUE} (or first-level) cases, using \code{\link{prop.test}}.
-#'
-#' @export
-#' @name ci
-#' @examples
-#' ci(rnorm(10), 0.95)
-#' a <- rnorm(10)
-#' ci(a, 0.99)
-#' ci(a, 0.99, df = 10)
-ci.numeric <- function(x, level = 0.95, na.rm = TRUE, df = Inf) {
-  if (na.rm) x <- na.omit(x)
-  lx <- length(x)
-  se <- sd(x)/sqrt(lx)
-  mean(x) + c(- se, + se) * qt((1 + level)/2, df)
-}
-
-
-#' @rdname ci
-#' @export
-ci.default <- function(x, level = 0.95, na.rm = TRUE) {
-  size <- length(x)
-  if (na.rm) x <- x[! is.na(x)]
-  fx <- as.factor(x)
-  if (nlevels(droplevels(fx)) > 2) stop("Called ci() on a non-numeric variable with more than two unique values")
-  if (! is.logical(x)) x <- x == x[1]
-  prop.test(sum(x), length(x), conf.level = level)$conf.int * size
-}
-
-
-#' @rdname ci
-#' @export
-ci <- function(x, ...) UseMethod("ci")
 
 #' Fast Friendly Plot
 #'

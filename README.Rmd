@@ -116,7 +116,12 @@ ffplot(hist(cut, position = "fill") ~ color, diamonds)
 Barplot with confidence intervals:
 
 ```{r}
-ffplot(bar(mean(price), fill = "darkgreen") + ci(price, 0.99) ~ color, d30) 
+ffplot(bar(mean(price)) + ci(price, 0.99) ~ color, diamonds) 
+```
+
+Barplot of proportions with binomial confidence intervals:
+```{r}
+ffplot(prop(cut == "Ideal") + ci(cut == "Ideal") ~ color, diamonds)
 ```
 
 ## TODO
@@ -127,5 +132,5 @@ ffplot(bar(mean(price), fill = "darkgreen") + ci(price, 0.99) ~ color, d30)
 * `ci` function for binomial data (DONE)
 * Facetting
 * `se` function for standard errors?
-* replace auto-barplot by `count()` or `prop()` function?
+* replace auto-barplot with some kind of `props()` function?
 * How to decide whether to do confidence intervals for proportions or counts? I think default to proportions

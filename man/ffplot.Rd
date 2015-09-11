@@ -6,8 +6,8 @@
 \alias{ffplot.formula}
 \title{Fast Friendly Plot}
 \usage{
-\method{ffplot}{formula}(formula, data = parent.frame(), geom = NULL, ...,
-  subset = NULL, smooth = NULL)
+\method{ffplot}{formula}(formula, data = parent.frame(), ..., subset = NULL,
+  smooth = NULL)
 
 \method{ffplot}{default}(data, ...)
 }
@@ -15,8 +15,6 @@
 \item{formula}{a two-sided formula. The right hand side must contain only one term (which can be an interaction, e.g. \code{g1:g2}).}
 
 \item{data}{a data frame}
-
-\item{geom}{a vector of one or more names of geoms}
 
 \item{...}{other arguments passed into (all) geoms}
 
