@@ -1,8 +1,5 @@
-ffplot: a fast, friendly plotting command for R.
-================================================
-
-`ffplot` is a simple and intuitive frontend around `ggplot2`. `ffplot`'s
-goal is to be usable without thinking.
+`ffplot` is a simple and intuitive plotting command. The goal is that
+you can use it without thinking or looking up documentation.
 
 Status: totally alpha! Download and enjoy.
 
@@ -58,50 +55,58 @@ Plot a function of your data:
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-8-1.png)
 
+Or on the x axis:
+
+    ffplot(price ~ cut(carat, 5), diamonds) 
+
+![](README_files/figure-markdown_strict/unnamed-chunk-9-1.png)
+
 Different plot types:
 
     ffplot(boxplot(price) ~ cut, diamonds)
 
-![](README_files/figure-markdown_strict/unnamed-chunk-9-1.png)
-
-Multiple plot types and options:
-
-    ffplot(price + line(mean(price), color = "red") ~ cut, d30) 
-
 ![](README_files/figure-markdown_strict/unnamed-chunk-10-1.png)
+
+Combine plots by adding terms:
+
+    ffplot(price + smooth(mean(price)) ~ cut, d30) 
+
+    ## geom_smooth: Only one unique x value each group.Maybe you want aes(group = 1)?
+
+![](README_files/figure-markdown_strict/unnamed-chunk-11-1.png)
 
 Mean and confidence intervals. `ffplot` guesses that you want error bars
 for the built-in `ci` function:
 
     ffplot(mean(price) + ci(price, 0.95) ~ cut, diamonds) 
 
-![](README_files/figure-markdown_strict/unnamed-chunk-11-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-12-1.png)
 
 Facets:
 
     ffplot(price ~ carat | color, diamonds)
 
-![](README_files/figure-markdown_strict/unnamed-chunk-12-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-13-1.png)
 
 Two-way facets:
 
     ffplot(price ~ carat | color + cut, diamonds)
 
-![](README_files/figure-markdown_strict/unnamed-chunk-13-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-14-1.png)
 
 Add `ggplot2` options:
 
     library(ggplot2)
     ffplot(cut ~ color, diamonds) + scale_fill_grey()
 
-![](README_files/figure-markdown_strict/unnamed-chunk-14-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-15-1.png)
 
 Use it with `dplyr` or `magrittr`:
 
     library(dplyr)
     diamonds %>% ffplot(cut ~ color)
 
-![](README_files/figure-markdown_strict/unnamed-chunk-15-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-16-1.png)
 
 Bonus `fftable` function:
 
@@ -123,19 +128,25 @@ Plot proportions in a group:
 
     ffplot(hist(cut, position = "fill") ~ color, diamonds)
 
-![](README_files/figure-markdown_strict/unnamed-chunk-17-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-18-1.png)
 
 Barplot with confidence intervals:
 
     ffplot(bar(mean(price)) + ci(price, 0.99) ~ color, diamonds) 
 
-![](README_files/figure-markdown_strict/unnamed-chunk-18-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-19-1.png)
 
 Barplot of proportions with binomial confidence intervals:
 
     ffplot(prop(cut == "Ideal") + ci(cut == "Ideal") ~ color, diamonds)
 
-![](README_files/figure-markdown_strict/unnamed-chunk-19-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-20-1.png)
+
+Frequency polygon:
+
+    ffplot(freqpoly(cut) ~ color, diamonds)
+
+![](README_files/figure-markdown_strict/unnamed-chunk-21-1.png)
 
 TODO
 ----

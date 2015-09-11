@@ -1,5 +1,5 @@
 ---
-title: "ffplot"
+title: "ffplot: a fast, friendly plotting command for R"
 author: "David Hugh-Jones"
 date: "8 September 2015"
 output: html_document
@@ -10,9 +10,9 @@ output: html_document
 library(rmarkdown)
 render("README.Rmd", md_document(fig_width = 4, fig_height = 3))
 ```
-# ffplot: a fast, friendly plotting command for R. 
 
-`ffplot` is a simple and intuitive frontend around `ggplot2`. `ffplot`'s goal is to be usable without thinking.
+`ffplot` is a simple and intuitive plotting command. The goal is that you can use it without thinking or looking up
+documentation. 
 
 Status: totally alpha! Download and enjoy. 
 
@@ -65,18 +65,23 @@ Plot a function of your data:
 ffplot(range(price) ~ color, d30) 
 ```
 
+Or on the x axis:
+```{r}
+ffplot(price ~ cut(carat, 5), diamonds) 
+```
+
+
 Different plot types:
 
 ```{r}
 ffplot(boxplot(price) ~ cut, diamonds)
 ```
 
-Multiple plot types and options:
+Combine plots by adding terms:
 
 ```{r}
-ffplot(price + line(mean(price), color = "red") ~ cut, d30) 
+ffplot(price + smooth(mean(price)) ~ cut, d30) 
 ```
-
 
 Mean and confidence intervals. `ffplot` guesses that you want error bars for the built-in `ci` function:
 
@@ -133,6 +138,11 @@ ffplot(bar(mean(price)) + ci(price, 0.99) ~ color, diamonds)
 Barplot of proportions with binomial confidence intervals:
 ```{r}
 ffplot(prop(cut == "Ideal") + ci(cut == "Ideal") ~ color, diamonds)
+```
+
+Frequency polygon:
+```{r}
+ffplot(freqpoly(cut) ~ color, diamonds)
 ```
 
 ## TODO

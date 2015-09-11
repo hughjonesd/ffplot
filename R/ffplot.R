@@ -3,68 +3,32 @@
 #' @import reshape2
 #' @import Formula
 
-# TODO: why does by use factor levels which aren't in data, in rhs?
-fave <- function(formula, data = parent.frame(), subset = NULL) {
-  vars <- get_all_vars(formula, data) # this is the data we need.
-  subset2 <-if (! is.null(subset)) eval(substitute(subset), data) else TRUE
-  vars <- vars[subset2,]
-  names_rhs <- attr(terms(formula[-2L], keep.order = TRUE), "term.labels")
-  lhs <- attr(terms(formula[-3L], keep.order = TRUE), "term.labels")
-  if (length(lhs) > 1) stop("Left hand side of formula has more than 1 term")
-
-  # TODO add example to README with functions on RHS
-  rhs <- lapply(names_rhs, function (x) {
-    x <- eval(parse(text = x), vars)
-    if (is.factor(x)) x <- droplevels(x)
-    x
-  })
-  if (! all(sapply(rhs, length) == length(rhs[[1]]))) stop("Right hand side variables did not all have same length")
-  interacted_rhs <- do.call(interaction, rhs)
-  result <- aggregate(1:nrow(vars), rhs, FUN = function (x) eval(parse(text = lhs), vars[x,]))
-  names(result) <- c(names_rhs, lhs)
-  result
-}
-
-# TODO: fix fftable!
-#' @rdname fftable
-#' @export
-fftable.default <- function(data, ...) fftable.formula(..., data = data)
-
-#' Create a table from a formula
-#'
-#' \code{fftable} splits \code{data} by unique values of \code{formula}'s right hand side, and
-#' evaluates the left hand side for each subset.
-#'
-#' The default method simply passes its arguments on to \code{fftable.formula}, taking the first argument as
-#' \code{data}. This plays nicely with \code{\link[dplyr]{dplyr-package}}.
-#'
-#' @param formula a formula object with exactly one term on the LHS and RHS.
-#' @param data a data frame (or list or environment) containing the variables referred to in \code{formula}.
-#' @param subset an optional vector specifying a subset of \code{data}.
-#' @name fftable
-#' @return
-#' A data frame like that from \code{\link{aggregate}}.
-#' @export
-#'
-#' @examples
-#' fftable(mean(mpg) ~ gear, mtcars)
-#' fftable(range(mpg) ~ gear, mtcars)
-#' fftable(mpg ~ gear, mtcars)
-#' fftable(cbind(range(mpg), quantile(mpg, c(0.25, 0.75))) ~ gear, mtcars)
-#' \dontrun{
-#' library(dplyr)
-#' mtcars %>% fftable(range(mpg) ~ gear)
-#' }
-fftable.formula <- function(formula, data = parent.frame(), subset = NULL) {
-  fave(formula, data, subset)
-}
-
-#' @export
-fftable <- function(x, ...) UseMethod("fftable")
 
 geom_map <- list(
   ci = "geom_errorbar",
   prop = "geom_bar"
+)
+
+geom_names <- c("point", "line", "errorbar", "boxplot", "bar", "linerange", "violin", "histogram", "density", "smooth",
+  "freqpoly")
+
+extra_args <- list(
+  geom_errorbar    = list(stat = "summary", fun.y = mean, fun.ymin = min, fun.ymax = max, width = 0.5),
+  geom_linerange   = list(stat = "summary", fun.y = mean, fun.ymin = min, fun.ymax = max),
+  geom_density     = list(position = "stack"),
+  geom_bar         = list(stat = "identity"),
+  geom_smooth      = list(se = FALSE)
+)
+
+extra_mapping <- list(
+  geom_line      = list(group = "1"),
+  geom_errorbar  = list(group = "x"),
+  geom_linerange = list(group = "x"),
+  geom_boxplot   = list(x = "factor(x)"),
+  geom_violin    = list(x = "factor(x)"),
+  geom_histogram = list(group = "y", fill = "y", y = NULL),
+  geom_freqpoly  = list(group = "y", color = "y", y = NULL),
+  geom_density   = list(group = "y", fill = "y", y = NULL, alpha = 0.3)
 )
 
 #' Fast Friendly Plot
@@ -134,7 +98,7 @@ ffplot.formula <- function(formula, data = parent.frame(), ..., subset = NULL, s
   # (b) interact the facets with the RHS when doing calculations.
   # (c) rewrite fave (or whatever) to return tables separately
   ggp <- ggplot()
-  geom_names <- c("point", "line", "errorbar", "boxplot", "bar", "linerange", "violin", "histogram", "density")
+
   ylab. <- character(0)
 
   for (lhs in lhs_all) {
@@ -170,34 +134,20 @@ ffplot.formula <- function(formula, data = parent.frame(), ..., subset = NULL, s
       if (all(lenresult == 2)) "geom_linerange" else "geom_point"
     # by here geom_name is defined
 
-    extra_args <- list(
-      geom_errorbar    = list(stat = "summary", fun.y = mean, fun.ymin = min, fun.ymax = max, width = 0.5),
-      geom_linerange   = list(stat = "summary", fun.y = mean, fun.ymin = min, fun.ymax = max),
-      geom_density     = list(position = "stack"),
-      geom_bar         = list(stat = "identity")
-    )
     dflt_geom_args <- list(data = dfr)
     if (geom_name %in% names(extra_args)) dflt_geom_args <- merge(extra_args[[geom_name]], dflt_geom_args)
     dflt_geom_args <- merge(list(...), dflt_geom_args)
     geom_args <- merge(geom_args, dflt_geom_args)
 
     mapping <- list(x = "x", y = "y")
-    extra_mapping <- list(
-      geom_line      = list(group = "1"),
-      geom_errorbar  = list(group = "x"),
-      geom_linerange = list(group = "x"),
-      geom_boxplot   = list(x = "factor(x)"),
-      geom_violin    = list(x = "factor(x)"),
-      geom_histogram = list(group = "y", fill = "y", y = NULL),
-      geom_density   = list(group = "y", fill = "y", y = NULL)
-    )
     if (geom_name %in% names(extra_mapping)) mapping <- merge(extra_mapping[[geom_name]], mapping)
     #mapping <- mapping[! sapply(mapping, is.null)] # delete some elements
     geom_args$mapping <- do.call(aes_string, mapping)
 
     lyr <- do.call(geom_name, geom_args)
     ggp <- ggp + lyr
-    if (geom_name %in% c("histogram", "density")) ggp <- ggp + guides(fill = guide_legend(title = lhs))
+    if (geom_name %in% c("geom_histogram", "geom_density", "geom_freqpoly")) ggp <- ggp +
+      guides(fill = guide_legend(title = lhs))
     ylab. <- c(ylab., lhs)
   }
   ggp <- ggp + xlab(xlab.) + ylab(paste(ylab., collapse = " + "))
