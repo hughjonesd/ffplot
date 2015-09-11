@@ -84,6 +84,17 @@ Mean and confidence intervals. `ffplot` guesses that you want error bars for the
 ffplot(mean(price) + ci(price, 0.95) ~ cut, diamonds) 
 ```
 
+Facets:
+```{r}
+ffplot(price ~ carat | color, diamonds)
+```
+
+Two-way facets:
+```{r}
+ffplot(price ~ carat | color + cut, diamonds)
+```
+
+
 Add `ggplot2` options:
 
 ```{r}
@@ -130,7 +141,7 @@ ffplot(prop(cut == "Ideal") + ci(cut == "Ideal") ~ color, diamonds)
 * Better ability to override defaults (DONE)
 * More geoms
 * `ci` function for binomial data (DONE)
-* Facetting
+* Facetting (DONE)
 * `se` function for standard errors?
 * replace auto-barplot with some kind of `props()` function?
 * How to decide whether to do confidence intervals for proportions or counts? I think default to proportions

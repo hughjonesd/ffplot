@@ -1,6 +1,7 @@
 
 #' @import ggplot2
 #' @import reshape2
+#' @import Formula
 
 # TODO: why does by use factor levels which aren't in data, in rhs?
 fave <- function(formula, data = parent.frame(), subset = NULL) {
@@ -115,8 +116,19 @@ geom_map <- list(
 #' diamonds %>% ffplot(cut ~ color)
 #' }
 ffplot.formula <- function(formula, data = parent.frame(), ..., subset = NULL, smooth = NULL) {
-  rhs <- attr(terms(formula[-2L], keep.order = TRUE), "term.labels")
-  lhs_all <- attr(terms(formula[-3L], keep.order = TRUE), "term.labels")
+  fml <- formula
+  lhs_all <- attr(terms(fml[-3], keep.order = TRUE), "term.labels")
+  rhs <- attr(terms(Formula(fml[-2])), "term.labels") # can now be more than one
+  xlab. <- rhs
+  if (length(rhs) > 1) {
+    if (as.character(fml[[3]][[1]]) != "|") warning("Facetting on right hand side variables.
+      Use `|` to separate facets, like: y ~ x | facet1 + facet2.
+      Otherwise, behaviour may change in future versions.")
+    facet <- rhs[-1]
+    xlab. <- rhs[1]
+    rhs <- paste(rhs, collapse = " + ")
+    facet <- if (length(facet) > 1) facet1 ~ facet2 else ~ facet1
+  }
 
   # TODO: facetting. This is complex because you need to (a) include facet info in (all) datasets
   # (b) interact the facets with the RHS when doing calculations.
@@ -148,13 +160,15 @@ ffplot.formula <- function(formula, data = parent.frame(), ..., subset = NULL, s
     lenresult <- if (is.matrix(y)) rep(ncol(y), nrow(y)) else if (is.list(y)) sapply(y, length) else rep(1, length(y))
     if (is.list(y)) y <- unlist(y)
     if (is.matrix(y)) y <- c(t(y))
-    x <- rep(result[,1], lenresult) # let's make the first column always the x. Others (if any) are for facetting
-
+    dfr <- result[rep(1:nrow(result), lenresult),]
+    names(dfr)[1] <- "x"      # First column is always the x. Others (if any) are for facetting
+    names(dfr)[2:ncol(dfr)] <- paste("facet", 1:(ncol(result)-1), sep = "")
+    dfr$y <- y
+    dfr$count <- unlist(lapply(lenresult, seq_len))
     if (is.na(geom_name)) geom_name <-
-      if (! is.numeric(y)) ifelse(is.numeric(x), "geom_density", "geom_histogram") else
+      if (! is.numeric(dfr$y)) ifelse(is.numeric(dfr$x), "geom_density", "geom_histogram") else
       if (all(lenresult == 2)) "geom_linerange" else "geom_point"
     # by here geom_name is defined
-    dfr <- data.frame(y = y, x = x, count = unlist(lapply(lenresult, seq_len)))
 
     extra_args <- list(
       geom_errorbar    = list(stat = "summary", fun.y = mean, fun.ymin = min, fun.ymax = max, width = 0.5),
@@ -186,7 +200,8 @@ ffplot.formula <- function(formula, data = parent.frame(), ..., subset = NULL, s
     if (geom_name %in% c("histogram", "density")) ggp <- ggp + guides(fill = guide_legend(title = lhs))
     ylab. <- c(ylab., lhs)
   }
-  ggp <- ggp + xlab(rhs) + ylab(paste(ylab., collapse = " + "))
+  ggp <- ggp + xlab(xlab.) + ylab(paste(ylab., collapse = " + "))
+  if (exists("facet", inherits = FALSE)) ggp <- ggp + facet_grid(facet)
   return(ggp)
 }
 

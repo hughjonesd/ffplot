@@ -77,19 +77,31 @@ for the built-in `ci` function:
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-11-1.png)
 
+Facets:
+
+    ffplot(price ~ carat | color, diamonds)
+
+![](README_files/figure-markdown_strict/unnamed-chunk-12-1.png)
+
+Two-way facets:
+
+    ffplot(price ~ carat | color + cut, diamonds)
+
+![](README_files/figure-markdown_strict/unnamed-chunk-13-1.png)
+
 Add `ggplot2` options:
 
     library(ggplot2)
     ffplot(cut ~ color, diamonds) + scale_fill_grey()
 
-![](README_files/figure-markdown_strict/unnamed-chunk-12-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-14-1.png)
 
 Use it with `dplyr` or `magrittr`:
 
     library(dplyr)
     diamonds %>% ffplot(cut ~ color)
 
-![](README_files/figure-markdown_strict/unnamed-chunk-13-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-15-1.png)
 
 Bonus `fftable` function:
 
@@ -111,15 +123,19 @@ Plot proportions in a group:
 
     ffplot(hist(cut, position = "fill") ~ color, diamonds)
 
-![](README_files/figure-markdown_strict/unnamed-chunk-15-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-17-1.png)
 
 Barplot with confidence intervals:
 
-    ffplot(bar(mean(price), fill = "darkgreen") + ci(price, 0.99) ~ color, d30) 
+    ffplot(bar(mean(price)) + ci(price, 0.99) ~ color, diamonds) 
 
-    ## Warning: Removed 4 rows containing missing values (stat_summary).
+![](README_files/figure-markdown_strict/unnamed-chunk-18-1.png)
 
-![](README_files/figure-markdown_strict/unnamed-chunk-16-1.png)
+Barplot of proportions with binomial confidence intervals:
+
+    ffplot(prop(cut == "Ideal") + ci(cut == "Ideal") ~ color, diamonds)
+
+![](README_files/figure-markdown_strict/unnamed-chunk-19-1.png)
 
 TODO
 ----
@@ -128,8 +144,8 @@ TODO
 -   Better ability to override defaults (DONE)
 -   More geoms
 -   `ci` function for binomial data (DONE)
--   Facetting
+-   Facetting (DONE)
 -   `se` function for standard errors?
--   replace auto-barplot by `count()` or `prop()` function?
+-   replace auto-barplot with some kind of `props()` function?
 -   How to decide whether to do confidence intervals for proportions or
     counts? I think default to proportions
