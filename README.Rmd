@@ -107,8 +107,10 @@ ffplot(price ~ carat | color, diamonds)
 ```
 
 Two-way facets:
-```{r, warning = FALSE}
-ffplot(smooth(mean(price)) ~ carat | color + cut, diamonds)
+```{r}
+x <- ffplot(smooth(mean(price)) ~ carat | color + cut, diamonds)
+
+suppressMessages(print(x)) # annoying warning messages...
 ```
 
 
