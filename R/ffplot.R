@@ -3,6 +3,15 @@
 #' @import reshape2
 
 
+merge.list <- function (x, y, ...) {
+  if (length(x) == 0) return(y)
+  if (length(y) == 0) return(x)
+  i = match(names(y), names(x))
+  i = is.na(i)
+  if (any(i))
+    x[names(y)[which(i)]] = y[which(i)]
+  x
+}
 # TODO: why does by use factor levels which aren't in data, in rhs?
 fave <- function(formula, data = parent.frame(), subset = NULL) {
   vars <- get_all_vars(formula, data) # this is the data we need.
@@ -63,8 +72,7 @@ fftable.formula <- function(formula, data = parent.frame(), subset = NULL) {
 fftable <- function(x, ...) UseMethod("fftable")
 
 geom_map <- list(
-  ci = "errorbar",
-  range = "linerange"
+  ci = "geom_errorbar"
 )
 
 #' Return confidence intervals of a variable
@@ -101,7 +109,7 @@ ci.default <- function(x, level = 0.95, na.rm = TRUE) {
   size <- length(x)
   if (na.rm) x <- x[! is.na(x)]
   fx <- as.factor(x)
-  if (nlevels(droplevels(fx)) > 2) stop("Called ci() on a variable with more than two levels")
+  if (nlevels(droplevels(fx)) > 2) stop("Called ci() on a non-numeric variable with more than two unique values")
   if (! is.logical(x)) x <- x == x[1]
   prop.test(sum(x), length(x), conf.level = level)$conf.int * size
 }
@@ -160,7 +168,6 @@ ci <- function(x, ...) UseMethod("ci")
 #' diamonds %>% ffplot(cut ~ color)
 #' }
 ffplot.formula <- function(formula, data = parent.frame(), ..., subset = NULL, smooth = NULL) {
-
   rhs <- attr(terms(formula[-2L], keep.order = TRUE), "term.labels")
   lhs_all <- attr(terms(formula[-3L], keep.order = TRUE), "term.labels")
 
@@ -168,64 +175,71 @@ ffplot.formula <- function(formula, data = parent.frame(), ..., subset = NULL, s
   # (b) interact the facets with the RHS when doing calculations.
   # (c) rewrite fave (or whatever) to return tables separately
   ggp <- ggplot()
-  i <- 0
-  geom_names <- c("point", "line", "errorbar", "boxplot", "barplot", "linerange", "violin", "histogram", "density")
+  geom_names <- c("point", "line", "errorbar", "boxplot", "bar", "linerange", "violin", "histogram", "density")
+  ylab. <- character(0)
 
   for (lhs in lhs_all) {
-    i <- i + 1
-    geom_name <- NULL
+    geom_name <- NA # NA is returned by pmatch below, so use NA not NULL
     geom_args <- list()
     outer_fun <- parse(text = lhs)[[1]] # this gets e.g. "log(y)" in "log(y) + ..."
     if (is.call(outer_fun)) {
       outer_fun_name <- as.character(outer_fun[[1]])
-      if (! is.na(geom_name <- pmatch(outer_fun_name, geom_names))) {
-        lhs <- as.character(outer_fun[[2]])
+      try(geom_name <- match.arg(outer_fun_name, geom_names), silent = TRUE)
+      if (! is.na(geom_name)) {
+        lhs <- deparse(outer_fun[[2]])
         geom_name <- paste0("geom_", geom_name)
-        geom_args <- as.list(outer_fun[[3]])
-      }
-      if (outer_fun_name %in% names(geom_map)) {
+        if (length(outer_fun) > 2) geom_args <- as.list(outer_fun[-(1:2)])
+      } else if (outer_fun_name %in% names(geom_map)) {
         geom_name <- geom_map[[outer_fun_name]]
       }
     }
     # if we still haven't got geom_name, we'll decide by the mode of lhs and rhs
 
     fml <- formula(paste(lhs, "~", rhs))
-    result <- fave(fml, data, subset)
-    result_data <- unlist(result)
-    lenresult <- sapply(result, length)
-    cv <- attr(result, "colvalues") # can be numeric, factor
+    result <- fave(fml, data, subset) # gives a data frame, unique vals of LHS for each RHS. Last col can be matrix, list
+    y <- result[, ncol(result)]
+    lenresult <- if (is.matrix(y)) rep(ncol(y), nrow(y)) else if (is.list(y)) sapply(y, length) else rep(1, length(y))
+    if (is.list(y)) y <- unlist(y)
+    if (is.matrix(y)) y <- c(t(y))
+    x <- rep(result[,1], lenresult) # let's make the first column always the x. Others (if any) are for facetting
 
-    if (is.null(geom_name)) geom_name <-
-      if (is.character(result_data) || is.factor(result_data)) ifelse(is.numeric(cv), "density", "histogram") else
-      if (all(lenresult == 2)) "linerange" else "point"
+    if (is.na(geom_name)) geom_name <-
+      if (! is.numeric(y)) ifelse(is.numeric(x), "geom_density", "geom_histogram") else
+      if (all(lenresult == 2)) "geom_linerange" else "geom_point"
     # by here geom_name is defined
-    geom <- match.fun(geom_name)
-    # TODO: allow default attributes to be overridden by ..., e.g. position = "fill" below
-    dfr <- data.frame(y = result_data, x = rep(cv, lenresult), count = unlist(lapply(lenresult, seq_len)))
-    default_geom_args$data <- dfr
-    default_geom_args$mapping <- aes(x = x, y = y)
-    default_geom_args <- merge(list(...), default_geom_args)
-    geom_args <- merge(geom_args, default_geom_args)
-    lyr <- do.call(geom, geom_args)
+    dfr <- data.frame(y = y, x = x, count = unlist(lapply(lenresult, seq_len)))
 
-    lyr <- switch(geom_name,
-      "point"     = geom_point(aes(x = x, y = y), data = dfr, size = 3, ...),
-      "line"      = geom_line(aes(x = x, y = y, group = 1), data = dfr, ...),
-      "boxplot"   = geom_boxplot(aes(x = factor(x), y = y), data = dfr, ...),
-      "barplot"   = geom_bar(aes(x = x, y = y), stat = "identity", data = dfr, fill = "navy", ...),
-      "histogram" = geom_histogram(aes(x = x, group = y, fill = y), data = dfr, position = "fill"),
-      "density"   = geom_density(aes(x = x, group = y, fill = y), data = dfr, position = "fill"),
-      "violin"    = geom_violin(aes(x = factor(x), y = y), data = dfr, ...),
-      "errorbar"  = stat_summary(fun.y = mean, fun.ymin = min, fun.ymax = max, mapping = aes(x = x, y = y, group = x),
-                      geom = "errorbar", width = 0.25, data = dfr, ...),
-      "linerange" = stat_summary(fun.y = mean, fun.ymin = min, fun.ymax = max, mapping = aes(x = x, y = y, group = x),
-                      geom = "linerange", data = dfr, ...)
+    extra_args <- list(
+      geom_errorbar    = list(stat = "summary", fun.y = mean, fun.ymin = min, fun.ymax = max, width = 0.5),
+      geom_linerange   = list(stat = "summary", fun.y = mean, fun.ymin = min, fun.ymax = max),
+      geom_density     = list(position = "stack"),
+      geom_bar         = list(stat = "identity")
     )
+    dflt_geom_args <- list(data = dfr)
+    if (geom_name %in% names(extra_args)) dflt_geom_args <- merge(extra_args[[geom_name]], dflt_geom_args)
+    dflt_geom_args <- merge(list(...), dflt_geom_args)
+    geom_args <- merge(geom_args, dflt_geom_args)
 
+    mapping <- list(x = "x", y = "y")
+    extra_mapping <- list(
+      geom_line      = list(group = "1"),
+      geom_errorbar  = list(group = "x"),
+      geom_linerange = list(group = "x"),
+      geom_boxplot   = list(x = "factor(x)"),
+      geom_violin    = list(x = "factor(x)"),
+      geom_histogram = list(group = "y", fill = "y", y = NULL),
+      geom_density   = list(group = "y", fill = "y", y = NULL)
+    )
+    if (geom_name %in% names(extra_mapping)) mapping <- merge(extra_mapping[[geom_name]], mapping)
+    #mapping <- mapping[! sapply(mapping, is.null)] # delete some elements
+    geom_args$mapping <- do.call(aes_string, mapping)
+
+    lyr <- do.call(geom_name, geom_args)
     ggp <- ggp + lyr
     if (geom_name %in% c("histogram", "density")) ggp <- ggp + guides(fill = guide_legend(title = lhs))
+    ylab. <- c(ylab., lhs)
   }
-  ggp <- ggp + xlab(rhs) + ylab(Reduce(paste, deparse(formula[[2]])))
+  ggp <- ggp + xlab(rhs) + ylab(paste(ylab., collapse = " + "))
   return(ggp)
 }
 
