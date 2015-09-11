@@ -5,20 +5,27 @@
 
 # TODO: why does by use factor levels which aren't in data, in rhs?
 fave <- function(formula, data = parent.frame(), subset = NULL) {
-  subset2 <-if (! is.null(subset)) eval(substitute(subset), data) else TRUE
   vars <- get_all_vars(formula, data) # this is the data we need.
+  subset2 <-if (! is.null(subset)) eval(substitute(subset), data) else TRUE
   vars <- vars[subset2,]
-  rhs <- attr(terms(formula[-2L], keep.order = TRUE), "term.labels")
+  names_rhs <- attr(terms(formula[-2L], keep.order = TRUE), "term.labels")
   lhs <- attr(terms(formula[-3L], keep.order = TRUE), "term.labels")
-  if (length(rhs) > 1) stop("Right hand side of formula has more than 1 term: ", paste(rhs, collapse = ", "))
-  if (length(lhs) > 1) stop("Left hand side of formula has more than 1 term: ", paste(lhs, collapse = ", "))
+  if (length(lhs) > 1) stop("Left hand side of formula has more than 1 term")
 
-  rhs <- eval(parse(text = rhs), vars)
-  if (is.factor(rhs)) rhs <- droplevels(rhs)
-  result <- by(vars, rhs, function (x) eval(parse(text = lhs), x), simplify = FALSE)
-  structure(result, class = "list", colvalues = sort(unique(rhs)))
+  # TODO add example to README with functions on RHS
+  rhs <- lapply(names_rhs, function (x) {
+    x <- eval(parse(text = x), vars)
+    if (is.factor(x)) x <- droplevels(x)
+    x
+  })
+  if (! all(sapply(rhs, length) == length(rhs[[1]]))) stop("Right hand side variables did not all have same length")
+  interacted_rhs <- do.call(interaction, rhs)
+  result <- aggregate(1:nrow(vars), rhs, FUN = function (x) eval(parse(text = lhs), vars[x,]))
+  names(result) <- c(names_rhs, lhs)
+  result
 }
 
+# TODO: fix fftable!
 #' @rdname fftable
 #' @export
 fftable.default <- function(data, ...) fftable.formula(..., data = data)
@@ -36,28 +43,20 @@ fftable.default <- function(data, ...) fftable.formula(..., data = data)
 #' @param subset an optional vector specifying a subset of \code{data}.
 #' @name fftable
 #' @return
-#' An object of class \code{\link{table}}, or \code{\link{ftable}} if the result has more than 2 dimensions.
+#' A data frame like that from \code{\link{aggregate}}.
 #' @export
 #'
 #' @examples
 #' fftable(mean(mpg) ~ gear, mtcars)
 #' fftable(range(mpg) ~ gear, mtcars)
-#' # returns a list:
 #' fftable(mpg ~ gear, mtcars)
-#' # returns a flat table:
 #' fftable(cbind(range(mpg), quantile(mpg, c(0.25, 0.75))) ~ gear, mtcars)
 #' \dontrun{
 #' library(dplyr)
 #' mtcars %>% fftable(range(mpg) ~ gear)
 #' }
 fftable.formula <- function(formula, data = parent.frame(), subset = NULL) {
-  res <- fave(formula, data, subset)
-  res <- simplify2array(res)
-  if (! is.list(res) && length(dim(res[[1]])) > 1) {
-    return (ftable(as.table(res)))
-  } else {
-    return(as.table(res))
-  }
+  fave(formula, data, subset)
 }
 
 #' @export

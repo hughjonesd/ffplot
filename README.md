@@ -1,10 +1,8 @@
-ffplot
-======
+ffplot: a fast, friendly plotting command for R.
+================================================
 
-`ffplot` is the fast, friendly plotting command for R.
-
-`ffplot` is a simple and intuitive frontend around `ggplot2`. The goal
-is that you can use it without thinking or looking up documentation.
+`ffplot` is a simple and intuitive frontend around `ggplot2`. `ffplot`'s
+goal is to be usable without thinking.
 
 Status: totally alpha! Download and enjoy.
 
@@ -18,8 +16,7 @@ Examples
 --------
 
     library(ffplot)
-    library(ggplot2)
-    data(diamonds)
+    data(diamonds, package = "ggplot2")
     d30 <- diamonds[1:30,]
     head(d30)
 
@@ -33,95 +30,106 @@ Examples
 
 Simple scatterplots:
 
-    ffplot(price ~ carat, d30)
+    ffplot(price ~ carat, diamonds)
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-4-1.png)
 
 Plot numeric data by categories:
 
-    ffplot(price ~ color, d30)
+    ffplot(price ~ color, d30) # TODO: default to violin?
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-5-1.png)
 
 Barplot of categorical data:
 
-    ffplot(cut ~ color, d30)
+    ffplot(cut ~ color, diamonds) 
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-6-1.png)
 
 Density plot, if right hand side is numeric:
 
-    ffplot(cut ~ depth, d30)
+    ffplot(cut ~ depth, diamonds, position = "fill") 
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-7-1.png)
 
 Plot a function of your data:
 
-    ffplot(range(price) ~ color, d30)
+    ffplot(range(price) ~ color, d30) 
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-8-1.png)
 
-`ffplot` tries to guess what you want:
+Different plot types:
 
-    ffplot(ci(price, 0.95) ~ color, d30)
-
-    ## Warning: Removed 4 rows containing missing values (stat_summary).
+    ffplot(boxplot(price) ~ cut, diamonds)
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-9-1.png)
 
-Plot data with summary statistics:
+Multiple plot types and options:
 
-    ffplot(price + mean(price) ~ color, d30)
+    ffplot(price + line(mean(price), color = "red") ~ cut, d30) 
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-10-1.png)
 
-Use any functions:
+Mean and confidence intervals. `ffplot` guesses that you want error bars
+for the built-in `ci` function:
 
-    ffplot(mean(price) + ci(price, .99) ~ color, d30)
-
-    ## Warning: Removed 4 rows containing missing values (stat_summary).
+    ffplot(mean(price) + ci(price, 0.95) ~ cut, diamonds) 
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-11-1.png)
 
-Barplot with confidence intervals:
-
-    ffplot(mean(price) + ci(price, .99) ~ color, d30, geom = c("bar", "errorbar"), col = "orange")
-
-    ## Warning: Removed 4 rows containing missing values (stat_summary).
-
-![](README_files/figure-markdown_strict/unnamed-chunk-12-1.png)
-
 Add `ggplot2` options:
 
+    library(ggplot2)
     ffplot(cut ~ color, diamonds) + scale_fill_grey()
 
-![](README_files/figure-markdown_strict/unnamed-chunk-13-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-12-1.png)
 
 Use it with `dplyr` or `magrittr`:
 
     library(dplyr)
     diamonds %>% ffplot(cut ~ color)
 
-![](README_files/figure-markdown_strict/unnamed-chunk-14-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-13-1.png)
 
 Bonus `fftable` function:
 
     fftable(range(carat) ~ color, diamonds)
 
-    ##      D    E    F    G    H    I    J
-    ## A 0.20 0.20 0.20 0.23 0.23 0.23 0.23
-    ## B 3.40 3.05 3.01 3.01 4.13 4.01 5.01
+    ##   color range(carat).1 range(carat).2
+    ## 1     D           0.20           3.40
+    ## 2     E           0.20           3.05
+    ## 3     F           0.20           3.01
+    ## 4     G           0.23           3.01
+    ## 5     H           0.23           4.13
+    ## 6     I           0.23           4.01
+    ## 7     J           0.23           5.01
+
+Cookbook
+--------
+
+Plot proportions in a group:
+
+    ffplot(hist(cut, position = "fill") ~ color, diamonds)
+
+![](README_files/figure-markdown_strict/unnamed-chunk-15-1.png)
+
+Barplot with confidence intervals:
+
+    ffplot(bar(mean(price), fill = "darkgreen") + ci(price, 0.99) ~ color, d30) 
+
+    ## Warning: Removed 4 rows containing missing values (stat_summary).
+
+![](README_files/figure-markdown_strict/unnamed-chunk-16-1.png)
 
 TODO
 ----
 
--   Auto-smoothing for continuous x variables.
--   Better ability to override defaults; probably something like:
-
-<!-- -->
-
-    ffplot(violin(carat) + point(mean(carat)) ~ color, diamonds)
-
+-   Auto-smoothing for continuous x variables
+-   Better ability to override defaults (DONE)
 -   More geoms
--   Confidence interval function for binomial data
+-   `ci` function for binomial data (DONE)
 -   Facetting
+-   `se` function for standard errors?
+-   replace auto-barplot by `count()` or `prop()` function?
+-   How to decide whether to do confidence intervals for proportions or
+    counts? I think default to proportions

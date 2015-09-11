@@ -1,5 +1,5 @@
 ---
-title: "README"
+title: "ffplot"
 author: "David Hugh-Jones"
 date: "8 September 2015"
 output: html_document
@@ -10,12 +10,9 @@ output: html_document
 library(rmarkdown)
 render("README.Rmd", md_document(fig_width = 4, fig_height = 3))
 ```
-# ffplot
+# ffplot: a fast, friendly plotting command for R. 
 
-`ffplot` is the fast, friendly plotting command for R. 
-
-`ffplot` is a simple and intuitive frontend around `ggplot2`. The goal is that you can use it without thinking or 
-looking up documentation.
+`ffplot` is a simple and intuitive frontend around `ggplot2`. `ffplot`'s goal is to be usable without thinking.
 
 Status: totally alpha! Download and enjoy. 
 
@@ -31,8 +28,7 @@ install_github("hughjonesd/ffplot")
 
 ```{r}
 library(ffplot)
-library(ggplot2)
-data(diamonds)
+data(diamonds, package = "ggplot2")
 d30 <- diamonds[1:30,]
 head(d30)
 ```
@@ -41,62 +37,57 @@ head(d30)
 Simple scatterplots: 
 
 ```{r}
-ffplot(price ~ carat, d30)
+ffplot(price ~ carat, diamonds)
 ```
 
 Plot numeric data by categories: 
 
 ```{r}
-ffplot(price ~ color, d30)
+ffplot(price ~ color, d30) # TODO: default to violin?
 ```
 
 Barplot of categorical data:
 
 ```{r}
-ffplot(cut ~ color, d30)
+ffplot(cut ~ color, diamonds) 
 ```
 
 Density plot, if right hand side is numeric:
 
 ```{r}
-ffplot(cut ~ depth, d30)
+ffplot(cut ~ depth, diamonds, position = "fill") 
 ```
 
 
 Plot a function of your data:
 
 ```{r}
-ffplot(range(price) ~ color, d30)
+ffplot(range(price) ~ color, d30) 
 ```
 
-`ffplot` tries to guess what you want:
+Different plot types:
 
 ```{r}
-ffplot(ci(price, 0.95) ~ color, d30)
+ffplot(boxplot(price) ~ cut, diamonds)
+```
+
+Multiple plot types and options:
+
+```{r}
+ffplot(price + line(mean(price), color = "red") ~ cut, d30) 
 ```
 
 
-Plot data with summary statistics:
+Mean and confidence intervals. `ffplot` guesses that you want error bars for the built-in `ci` function:
 
 ```{r}
-ffplot(price + mean(price) ~ color, d30)
-```
-
-Use any functions:
-
-```{r}
-ffplot(mean(price) + ci(price, .99) ~ color, d30)
-```
-
-Barplot with confidence intervals:
-
-```{r}
-ffplot(mean(price) + ci(price, .99) ~ color, d30, geom = c("bar", "errorbar"), col = "orange")
+ffplot(mean(price) + ci(price, 0.95) ~ cut, diamonds) 
 ```
 
 Add `ggplot2` options:
 
 ```{r}
+library(ggplot2)
 ffplot(cut ~ color, diamonds) + scale_fill_grey()
 ```
 
@@ -114,13 +105,27 @@ Bonus `fftable` function:
 fftable(range(carat) ~ color, diamonds)
 ```
 
+## Cookbook
+
+Plot proportions in a group:
+```{r}
+ffplot(hist(cut, position = "fill") ~ color, diamonds)
+```
+
+
+Barplot with confidence intervals:
+
+```{r}
+ffplot(bar(mean(price), fill = "darkgreen") + ci(price, 0.99) ~ color, d30) 
+```
+
 ## TODO
 
-* Auto-smoothing for continuous x variables.
-* Better ability to override defaults; probably something like:
-```{r, eval = FALSE}
-ffplot(violin(carat) + point(mean(carat)) ~ color, diamonds)
-```
+* Auto-smoothing for continuous x variables
+* Better ability to override defaults (DONE)
 * More geoms
-* Confidence interval function for binomial data
+* `ci` function for binomial data (DONE)
 * Facetting
+* `se` function for standard errors?
+* replace auto-barplot by `count()` or `prop()` function?
+* How to decide whether to do confidence intervals for proportions or counts? I think default to proportions
