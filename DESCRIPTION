@@ -1,7 +1,7 @@
 Package: ffplot
 Type: Package
 Title: Fast, Friendly Plotting Function
-Version: 0.0.0.9100
+Version: 0.0.0.9200
 Date: 2015-09-08
 Author: David Hugh-Jones <davidhughjones@gmail.com>
 Maintainer: David Hugh-Jones <davidhughjones@gmail.com>
