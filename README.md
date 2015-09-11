@@ -12,6 +12,13 @@ Install
 Examples
 --------
 
+The basic form of every `ffplot` command is:
+
+    ffplot(y_variables ~ x_variable, data)
+
+The data is split up by unique values of x, and y variables are
+calculated. We'll demonstrate using the `diamonds` data from ggplot2.
+
     library(ffplot)
     data(diamonds, package = "ggplot2")
     d30 <- diamonds[1:30,]
@@ -25,90 +32,139 @@ Examples
     ## 5  0.31      Good     J     SI2  63.3    58   335 4.34 4.35 2.75
     ## 6  0.24 Very Good     J    VVS2  62.8    57   336 3.94 3.96 2.48
 
-Simple scatterplots:
+Here's a simple scatterplot.
 
     ffplot(price ~ carat, diamonds)
 
-![](README_files/figure-markdown_strict/unnamed-chunk-4-1.png)
-
-Plot numeric data by categories:
-
-    ffplot(price ~ color, d30) # TODO: default to violin?
-
 ![](README_files/figure-markdown_strict/unnamed-chunk-5-1.png)
 
-Barplot of categorical data:
+If x and y are not numeric, we get a barplot by default. We'll see how
+to change this later.
 
     ffplot(cut ~ color, diamonds) 
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-6-1.png)
 
-Density plot, if right hand side is numeric:
+If y is not numeric but x is, you get a density plot:
 
     ffplot(cut ~ depth, diamonds, position = "fill") 
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-7-1.png)
 
-Plot a function of your data:
+y variables can also be functions of your data. `ffplot` tries to choose
+an appropriate way to display results:
 
     ffplot(range(price) ~ color, d30) 
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-8-1.png)
 
-Or on the x axis:
+Of course x variables can be functions too:
 
     ffplot(price ~ cut(carat, 5), diamonds) 
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-9-1.png)
 
-Different plot types:
+If you want to use a different plot type, just put it on the left:
 
     ffplot(boxplot(price) ~ cut, diamonds)
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-10-1.png)
 
-Combine plots by adding terms:
+You combine plots by adding terms. Here's a smooth line:
 
-    ffplot(price + smooth(mean(price)) ~ cut, d30) 
+    ffplot(price + smooth(price) ~ carat, diamonds) 
 
-    ## geom_smooth: Only one unique x value each group.Maybe you want aes(group = 1)?
+    ## geom_smooth: method="auto" and size of largest group is >=1000, so using gam with formula: y ~ s(x, bs = "cs"). Use 'method = x' to change the smoothing method.
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-11-1.png)
 
-Mean and confidence intervals. `ffplot` guesses that you want error bars
-for the built-in `ci` function:
+Here we draw means and confidence intervals. `ffplot` guesses that you
+want error bars for the built-in `ci` function:
 
     ffplot(mean(price) + ci(price, 0.95) ~ cut, diamonds) 
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-12-1.png)
 
-Facets:
+You can add `ggplot` options to the plot:
 
-    ffplot(price ~ carat | color, diamonds)
+    ffplot(price ~ carat, d30, shape = 3, color = "darkgreen")
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-13-1.png)
 
-Two-way facets:
+Or you can add options for each y variable. If so, you'll need to
+specify the `geom` explicitly:
 
-    ffplot(price ~ carat | color + cut, diamonds)
+    ffplot(point(price, alpha = 0.2, color = "red") + smooth(price, color = "orange", size = 2, se = TRUE) ~ carat, diamonds)
+
+    ## geom_smooth: method="auto" and size of largest group is >=1000, so using gam with formula: y ~ s(x, bs = "cs"). Use 'method = x' to change the smoothing method.
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-14-1.png)
 
-Add `ggplot2` options:
+To create facets, just put them in the formula after a vertical bar:
+
+    ffplot(price ~ carat | color, diamonds)
+
+![](README_files/figure-markdown_strict/unnamed-chunk-15-1.png)
+
+Two-way facets:
+
+    ffplot(smooth(mean(price)) ~ carat | color + cut, diamonds)
+
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+    ## geom_smooth: method="auto" and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.
+
+![](README_files/figure-markdown_strict/unnamed-chunk-16-1.png)
+
+`ffplot` returns a `ggplot` object, so you can add functions just as
+with ggplot2.
 
     library(ggplot2)
     ffplot(cut ~ color, diamonds) + scale_fill_grey()
 
-![](README_files/figure-markdown_strict/unnamed-chunk-15-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-17-1.png)
 
-Use it with `dplyr` or `magrittr`:
+It's easy to use with `dplyr` or `magrittr`:
 
     library(dplyr)
     diamonds %>% ffplot(cut ~ color)
 
-![](README_files/figure-markdown_strict/unnamed-chunk-16-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-18-1.png)
 
-Bonus `fftable` function:
+If you want to see what the underlying data looks like, there's the
+`fftable` function:
 
     fftable(range(carat) ~ color, diamonds)
 
@@ -128,35 +184,35 @@ Plot proportions in a group:
 
     ffplot(hist(cut, position = "fill") ~ color, diamonds)
 
-![](README_files/figure-markdown_strict/unnamed-chunk-18-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-20-1.png)
 
 Barplot with confidence intervals:
 
     ffplot(bar(mean(price)) + ci(price, 0.99) ~ color, diamonds) 
 
-![](README_files/figure-markdown_strict/unnamed-chunk-19-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-21-1.png)
 
 Barplot of proportions with binomial confidence intervals:
 
     ffplot(prop(cut == "Ideal") + ci(cut == "Ideal") ~ color, diamonds)
 
-![](README_files/figure-markdown_strict/unnamed-chunk-20-1.png)
+![](README_files/figure-markdown_strict/unnamed-chunk-22-1.png)
 
-Frequency polygon:
+Other ggplot2 `geoms` you can use:
 
-    ffplot(freqpoly(cut) ~ color, diamonds)
+    ffplot:::geom_names
 
-![](README_files/figure-markdown_strict/unnamed-chunk-21-1.png)
+    ##  [1] "point"     "line"      "errorbar"  "boxplot"   "bar"      
+    ##  [6] "linerange" "violin"    "histogram" "density"   "smooth"   
+    ## [11] "freqpoly"  "jitter"    "quantile"
 
 TODO
 ----
 
--   Auto-smoothing for continuous x variables
+-   Auto-smoothing for continuous x variables (DONE for single x)
 -   Better ability to override defaults (DONE)
--   More geoms
+-   More geoms (DONE)
 -   `ci` function for binomial data (DONE)
 -   Facetting (DONE)
 -   `se` function for standard errors?
 -   replace auto-barplot with some kind of `props()` function?
--   How to decide whether to do confidence intervals for proportions or
-    counts? I think default to proportions

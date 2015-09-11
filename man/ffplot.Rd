@@ -45,23 +45,41 @@ with \code{\link[dplyr]{dplyr}}.
 \examples{
 data(diamonds)
 d30 <- diamonds[1:30,]
+
+# numeric y variables:
 ffplot(price ~ carat, d30)
 ffplot(price ~ color, d30)
-# histogram:
+
+# non-numeric y:
 ffplot(cut ~ color, d30)
+
+# a function of your data:
 ffplot(range(price) ~ color, d30)
+
+# confidence intervals
 ffplot(ci(price, 0.95) ~ color, d30)
-ffplot(price + mean(price) ~ color, d30)
-# customizing geoms:
-ffplot(mean(price) + ci(price, .99) ~ color, d30, geom = c("point", "linerange"))
-ffplot(price ~ color, diamonds, geom ="violin")
-ffplot(mean(price) ~ color, diamonds, geom = "point", shape = 3)
-# extra customization with ggplot:
-ffplot(cut ~ color, diamonds) + scale_fill_grey()
+
+# multiple plots:
+ffplot(price + ci(price) ~ color, d30)
+
+# choosing geoms:
+ffplot(line(mean(price)) + ci(price, .99) ~ color, d30)
+ffplot(violin(price) ~ color, diamonds)
+
+# adding options:
+ffplot(price, diamonds, geom = "point", shape = 3)
+
+# adding options per y variable:
+ffplot(point(price, alpha = 0.2, color = "red") + smooth(price, color = "orange", size = 2, se = TRUE) ~ carat, diamonds)
+
 \dontrun{
 # with dplyr
 library(dplyr)
 diamonds \%>\% ffplot(cut ~ color)
+
 }
+# Facetting:
+ffplot(price ~ carat | color, diamonds)
+ffplot(smooth(mean(price)) ~ carat | color + cut, diamonds)
 }
 

@@ -10,7 +10,7 @@ geom_map <- list(
 )
 
 geom_names <- c("point", "line", "errorbar", "boxplot", "bar", "linerange", "violin", "histogram", "density", "smooth",
-  "freqpoly")
+  "freqpoly", "jitter", "quantile")
 
 extra_args <- list(
   geom_errorbar    = list(stat = "summary", fun.y = mean, fun.ymin = min, fun.ymax = max, width = 0.5),
@@ -22,13 +22,15 @@ extra_args <- list(
 
 extra_mapping <- list(
   geom_line      = list(group = "1"),
+  geom_smooth    = list(group = "1"),
   geom_errorbar  = list(group = "x"),
   geom_linerange = list(group = "x"),
   geom_boxplot   = list(x = "factor(x)"),
   geom_violin    = list(x = "factor(x)"),
   geom_histogram = list(group = "y", fill = "y", y = NULL),
   geom_freqpoly  = list(group = "y", color = "y", y = NULL),
-  geom_density   = list(group = "y", fill = "y", y = NULL, alpha = 0.3)
+  geom_density   = list(group = "y", fill = "y", y = NULL, alpha = 0.3),
+  geom_quantile  = list(colour = "factor(..quantile..)")
 )
 
 #' Fast Friendly Plot
@@ -61,24 +63,42 @@ extra_mapping <- list(
 #' @examples
 #' data(diamonds)
 #' d30 <- diamonds[1:30,]
+#'
+#' # numeric y variables:
 #' ffplot(price ~ carat, d30)
 #' ffplot(price ~ color, d30)
-#' # histogram:
+#'
+#' # non-numeric y:
 #' ffplot(cut ~ color, d30)
+#'
+#' # a function of your data:
 #' ffplot(range(price) ~ color, d30)
+#'
+#' # confidence intervals
 #' ffplot(ci(price, 0.95) ~ color, d30)
-#' ffplot(price + mean(price) ~ color, d30)
-#' # customizing geoms:
-#' ffplot(mean(price) + ci(price, .99) ~ color, d30, geom = c("point", "linerange"))
-#' ffplot(price ~ color, diamonds, geom ="violin")
-#' ffplot(mean(price) ~ color, diamonds, geom = "point", shape = 3)
-#' # extra customization with ggplot:
-#' ffplot(cut ~ color, diamonds) + scale_fill_grey()
+#'
+#' # multiple plots:
+#' ffplot(price + ci(price) ~ color, d30)
+#'
+#' # choosing geoms:
+#' ffplot(line(mean(price)) + ci(price, .99) ~ color, d30)
+#' ffplot(violin(price) ~ color, diamonds)
+#'
+#' # adding options:
+#' ffplot(price, diamonds, geom = "point", shape = 3)
+#'
+#' # adding options per y variable:
+#' ffplot(point(price, alpha = 0.2, color = "red") + smooth(price, color = "orange", size = 2, se = TRUE) ~ carat, diamonds)
+#'
 #' \dontrun{
 #' # with dplyr
 #' library(dplyr)
 #' diamonds %>% ffplot(cut ~ color)
+#'
 #' }
+#' # Facetting:
+#' ffplot(price ~ carat | color, diamonds)
+#' ffplot(smooth(mean(price)) ~ carat | color + cut, diamonds)
 ffplot.formula <- function(formula, data = parent.frame(), ..., subset = NULL, smooth = NULL) {
   fml <- formula
   lhs_all <- attr(terms(fml[-3], keep.order = TRUE), "term.labels")
