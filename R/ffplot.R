@@ -10,7 +10,7 @@ geom_map <- list(
 )
 
 geom_names <- c("point", "line", "errorbar", "boxplot", "bar", "linerange", "violin", "histogram", "density", "smooth",
-  "freqpoly", "jitter", "quantile")
+  "freqpoly", "jitter", "quantile", "text")
 
 extra_args <- list(
   geom_errorbar    = list(stat = "summary", fun.y = mean, fun.ymin = min, fun.ymax = max, width = 0.5),
@@ -102,7 +102,7 @@ extra_mapping <- list(
 ffplot.formula <- function(formula, data = parent.frame(), ..., subset = NULL, smooth = NULL) {
   fml <- formula
   lhs_all <- attr(terms(fml[-3], keep.order = TRUE), "term.labels")
-  rhs <- attr(terms(Formula(fml[-2])), "term.labels") # can now be more than one
+  rhs <- attr(terms(Formula(fml[-2])), "term.labels")
   xlab. <- rhs
   if (length(rhs) > 1) {
     if (as.character(fml[[3]][[1]]) != "|") warning("Facetting on right hand side variables.
@@ -113,16 +113,12 @@ ffplot.formula <- function(formula, data = parent.frame(), ..., subset = NULL, s
     rhs <- paste(rhs, collapse = " + ")
     facet <- if (length(facet) > 1) facet1 ~ facet2 else ~ facet1
   }
-
-  # TODO: facetting. This is complex because you need to (a) include facet info in (all) datasets
-  # (b) interact the facets with the RHS when doing calculations.
-  # (c) rewrite fave (or whatever) to return tables separately
-  ggp <- ggplot()
-
   ylab. <- character(0)
 
+  ggp <- ggplot()
+
   for (lhs in lhs_all) {
-    geom_name <- NA # NA is returned by pmatch below, so use NA not NULL
+    geom_name <- NULL
     geom_args <- list()
     outer_fun <- parse(text = lhs)[[1]] # this gets e.g. "log(y)" in "log(y) + ..."
     if (is.call(outer_fun)) {
@@ -146,22 +142,26 @@ ffplot.formula <- function(formula, data = parent.frame(), ..., subset = NULL, s
     if (is.matrix(y)) y <- c(t(y))
     dfr <- result[rep(1:nrow(result), lenresult),]
     names(dfr)[1] <- "x"      # First column is always the x. Others (if any) are for facetting
-    names(dfr)[2:ncol(dfr)] <- paste("facet", 1:(ncol(result)-1), sep = "")
+    names(dfr)[2:ncol(dfr)] <- paste("facet", 1:(ncol(result)-1), sep = "") # TODO: reuse actual names?
     dfr$y <- y
     dfr$count <- unlist(lapply(lenresult, seq_len))
-    if (is.na(geom_name)) geom_name <-
+    if (is.null(geom_name)) geom_name <-
       if (! is.numeric(dfr$y)) ifelse(is.numeric(dfr$x), "geom_density", "geom_histogram") else
       if (all(lenresult == 2)) "geom_linerange" else "geom_point"
     # by here geom_name is defined
 
+    dots <- list(...)
+    dot_args <- dots[sapply(dots, class) != "uneval"]
     dflt_geom_args <- list(data = dfr)
     if (geom_name %in% names(extra_args)) dflt_geom_args <- merge(extra_args[[geom_name]], dflt_geom_args)
-    dflt_geom_args <- merge(list(...), dflt_geom_args)
+    dflt_geom_args <- merge(dot_args, dflt_geom_args)
     geom_args <- merge(geom_args, dflt_geom_args)
 
     mapping <- list(x = "x", y = "y")
     if (geom_name %in% names(extra_mapping)) mapping <- merge(extra_mapping[[geom_name]], mapping)
     #mapping <- mapping[! sapply(mapping, is.null)] # delete some elements
+    dot_mapping <- dots[sapply(dots, class) == "uneval"]
+    mapping <- modifyList(mapping, dot_mapping)
     geom_args$mapping <- do.call(aes_string, mapping)
 
     lyr <- do.call(geom_name, geom_args)

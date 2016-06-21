@@ -8,7 +8,7 @@ output: html_document
 ```{r, echo = FALSE, eval = FALSE}
 # to create README.md
 library(rmarkdown)
-render("README.Rmd", md_document(fig_width = 4.5, fig_height = 3))
+render("README.Rmd", md_document(fig_width = 6, fig_height = 3))
 ```
 
 `ffplot` is a simple and intuitive plotting command. The goal is that you can use it without thinking or looking up
@@ -161,10 +161,9 @@ ffplot:::geom_names
 
 ## TODO
 
-* Auto-smoothing for continuous x variables (DONE for single x)
-* Better ability to override defaults (DONE)
-* More geoms (DONE)
-* `ci` function for binomial data (DONE)
-* Facetting (DONE)
 * `se` function for standard errors?
+* `bubble` function
 * replace auto-barplot with some kind of `props()` function?
+* override `aes()` mapping, e.g. for `geom_text` labels or setting colour
+  - This is hard because it requires variables in `aes` to be in the data set from `fave`
+  - But no different from facetting

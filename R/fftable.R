@@ -1,8 +1,8 @@
 
 # TODO: why does by use factor levels which aren't in data, in rhs?
-fave <- function(formula, data = parent.frame(), subset = NULL) {
+fave <- function(formula, data = NULL, subset = NULL) {
   vars <- get_all_vars(formula, data) # this is the data we need.
-  subset. <-if (! is.null(subset)) eval(substitute(subset), data) else TRUE
+  subset. <- if (! is.null(subset)) eval(substitute(subset), data, environment(formula)) else TRUE
   vars <- vars[subset.,]
   names_rhs <- attr(terms(formula[-2L], keep.order = TRUE), "term.labels")
   lhs <- attr(terms(formula[-3L], keep.order = TRUE), "term.labels")
@@ -50,7 +50,7 @@ fftable.default <- function(data, ...) fftable.formula(..., data = data)
 #' library(dplyr)
 #' mtcars %>% fftable(range(mpg) ~ gear)
 #' }
-fftable.formula <- function(formula, data = parent.frame(), subset = NULL) fave(formula, data, subset)
+fftable.formula <- function(formula, data = NULL, subset = NULL) fave(formula, data, subset)
 
 #' @export
 fftable <- function(x, ...) UseMethod("fftable")
